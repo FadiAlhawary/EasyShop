@@ -1,8 +1,16 @@
+import 'package:easyshop/pages/Registration.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
- void main(){
-   runApp(MyApp());
- }
+import 'firebase_options.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform, // Ensure this is correctly imported
+  );
+  runApp(const MyApp());
+}
  
  class MyApp extends StatelessWidget {
    const MyApp({super.key});
@@ -16,14 +24,7 @@ import 'package:flutter/material.dart';
 
          ),
          body: 
-         Center(
-           child: Column(
-             children: [
-               Text('data'),
-               Text('Hellllo wolrrrrrd'),
-             ],
-           ),
-         ),
+             Register(),
        ),
      );
    }
