@@ -17,7 +17,12 @@ import 'package:flutter/material.dart';
          ),
          body: 
          Center(
-           child: Text('Hellllo wolrrrrrd'),
+           child: Column(
+             children: [
+               Text('data'),
+               Text('Hellllo wolrrrrrd'),
+             ],
+           ),
          ),
        ),
      );
