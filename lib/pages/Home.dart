@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
     Widget build(BuildContext context) {
       return Scaffold(
         body: Center(
-          child: Text('Home'),
+          child: Text('Hom'),
         ),
       );
     }
