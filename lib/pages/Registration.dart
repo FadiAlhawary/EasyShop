@@ -1,12 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easyshop/widgets/tree_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-// import 'package:firechat/pages/Log_In.dart';
-//import 'package:firechat/pages/otp_Verify.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-//import 'package:intl_phone_number_input/intl_phone_number_input.dart';
+import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
-
 import '../data/constants.dart';
 import 'Log_In.dart';
 
@@ -16,15 +13,33 @@ class Register extends StatefulWidget {
   @override
   State<Register> createState() => _RegisterState();
 }
+String formatTimestamp(Timestamp timestamp) {
+  DateTime date = timestamp.toDate(); // Convert Timestamp to DateTime
+  return DateFormat('dd/MM/yyyy').format(date); // Format as "day/month/year"
+}
 String? errorMessage;
 class _RegisterState extends State<Register> {
   //----------------------------------------Controllers----------------------------------------
   final emailController=TextEditingController();
   final passwordController=TextEditingController();
- // PhoneNumber number = PhoneNumber(isoCode: 'US');
-  //----------------------------------------End----------------------------------------
+ // PhoneNumber number =
+  final dateController=TextEditingController();
+  //----------------------------------------Date picker----------------------------------------
+  Future<void> _setDate() async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      firstDate: DateTime(1940),
+      lastDate: DateTime(2100),
+      initialDate: DateTime.now(),
+    );
+    if (picked != null) {
+      dateController.text = picked.toString().split(" ")[0];
+    }
+  }
+
+
   bool isLoading=false;
-  double heightBetweenWidgets=20;
+  double heightBetweenWidgets=10;
   //----------------------------------------Email Validation----------------------------------------
 
   String? emailErrorMessage;
@@ -79,51 +94,6 @@ class _RegisterState extends State<Register> {
   @override
   Widget build(BuildContext context) {
 
-    //----------------------------------------Phone Number Register----------------------------------------
-    // Future<void> phoneNUmberRegister(UserCredential userCredential) async {
-    //   print("Phone Number: ${number.phoneNumber}");
-    //
-    //   try {
-    //     await FirebaseAuth.instance.verifyPhoneNumber(
-    //       phoneNumber: number.phoneNumber,
-    //
-    //       verificationCompleted: (phoneAuthCredential) async {
-    //         await userCredential.user!.linkWithCredential(phoneAuthCredential);
-    //
-    //       },
-    //       verificationFailed: (error) {
-    //         if (error.code == 'invalid-phone-number') {
-    //           ScaffoldMessenger.of(context).showSnackBar(
-    //             SnackBar(content: Text('Invalid Phone Number')),
-    //           );
-    //         } else {
-    //           ScaffoldMessenger.of(context).showSnackBar(
-    //             SnackBar(content: Text(error.message ?? 'Phone verification failed')),
-    //           );
-    //         }
-    //       },
-    //       codeSent: (verificationId, forceResendingToken) {
-    //         setState(() {
-    //           verificationCode = verificationId;
-    //         });
-    //
-    //         // Navigate to OTP verification screen
-    //         Navigator.pushReplacement(
-    //           context,
-    //           MaterialPageRoute(
-    //             builder: (context) => OtpVerify(verificationCode: verificationCode),
-    //           ),
-    //         );
-    //       },
-    //       codeAutoRetrievalTimeout: (verificationId) {
-    //         verificationCode = verificationId;
-    //       },
-    //     );
-    //   } on FirebaseAuthException catch (e) {
-    //
-    //     errorMessage = e.message;
-    //   }
-    // }
 
     //----------------------------------------Sign In with email and password----------------------------------------
 
@@ -148,8 +118,17 @@ class _RegisterState extends State<Register> {
 
         FirebaseAuth.instance.currentUser?.reload();
 
-       // await phoneNUmberRegister(userCredential);
+            final firestore = await FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid);
+            firestore.set({
+              'Name' : 'Fadi ',
+               'DOB' : DateTime.now(),
+               'Gender':true,
+               'profileImageUrl':'asasd',
+            });
 
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
+               return WidgetTree();
+        },));
       }on FirebaseAuthException catch(e){
         //print(e.message);
         setState(() {
@@ -233,34 +212,59 @@ class _RegisterState extends State<Register> {
               SizedBox(height: heightBetweenWidgets,),
 
               FittedBox(child: Text('Phone Number', style: KStyle.headerTextStyle)),
-              //----------------------------------------Phone Number----------------------------------------
-              // InternationalPhoneNumberInput(
-              //
-              //   onInputChanged: (PhoneNumber number) {
-              //     setState(() {
-              //       this.number = number;
-              //
-              //     });
-              //   },
-              //   selectorConfig: SelectorConfig(
-              //     selectorType: PhoneInputSelectorType.DIALOG,
-              //     showFlags: false,
-              //     setSelectorButtonAsPrefixIcon: true,
-              //   ),
-              //   textFieldController: TextEditingController(),
-              //   inputDecoration: InputDecoration(
-              //
-              //     labelText: "Phone Number",
-              //     border: OutlineInputBorder(
-              //         borderRadius: BorderRadius.circular(20)
-              //     ),
-              //   ),
-              //   initialValue: number,
-              //   inputBorder: OutlineInputBorder(
-              //
-              //   ),
-              // ),
-              // SizedBox(height: heightBetweenWidgets),
+              //----------------------------------------Full Name----------------------------------------
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextFieldCostume(
+                    hint: 'Full Name',
+
+                    preIcon: Icon(Icons.perm_identity_rounded),
+                    valueController: emailController, validationFunction: emailValidation,
+                    onErrorChange: (value){
+                      setState(() {
+                        emailErrorMessage=value;
+                      });
+                    }, errorFlag: emailFlag,
+                  ),
+                  SizedBox(height: heightBetweenWidgets,),
+
+                  if(emailErrorMessage!=null)
+                    Text(emailErrorMessage!,style: KStyle.errorMessageTextStyle,),
+
+                ],
+              ),
+              SizedBox(height: heightBetweenWidgets),
+              //----------------------------------------Gender Selection----------------------------------------
+
+
+
+              //----------------------------------------Date Picker----------------------------------------
+              Text(
+                'BirthDay',
+                style: KStyle.headerTextStyle,
+              ),
+              SizedBox(height: heightBetweenWidgets),
+              TextField(
+                controller: dateController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      20,
+                    ),
+                  ),
+                  hintText: 'Enter date',
+                  hintStyle: KStyle.normalTextStyle,
+
+                  prefixIcon: Icon(Icons.date_range),
+                  filled: true,
+                ),
+                readOnly: true,
+                onTap: () {
+                  _setDate();
+                },
+              ),
+              SizedBox(height: heightBetweenWidgets),
               //----------------------------------------Submit Button----------------------------------------
               Column(
 
