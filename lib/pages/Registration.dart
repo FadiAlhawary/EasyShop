@@ -18,12 +18,15 @@ String formatTimestamp(Timestamp timestamp) {
   return DateFormat('dd/MM/yyyy').format(date); // Format as "day/month/year"
 }
 String? errorMessage;
+
 class _RegisterState extends State<Register> {
   //----------------------------------------Controllers----------------------------------------
   final emailController=TextEditingController();
   final passwordController=TextEditingController();
  // PhoneNumber number =
   final dateController=TextEditingController();
+  String? selectedGender;
+  final nameController=TextEditingController();
   //----------------------------------------Date picker----------------------------------------
   Future<void> _setDate() async {
     DateTime? picked = await showDatePicker(
@@ -40,6 +43,26 @@ class _RegisterState extends State<Register> {
 
   bool isLoading=false;
   double heightBetweenWidgets=10;
+//----------------------------------------Name Validation----------------------------------------
+
+  String? nameMessageError;
+  bool nameFlag=false;
+  String? nameValidation(String value){
+    if(value.isEmpty) {
+      setState(() {
+        nameFlag=true;
+      });
+      return 'Name is empty';
+    }
+    nameFlag=false;
+    return null;
+  }
+  //----------------------------------------Gender Validation----------------------------------------
+   bool genderValidation(){
+      if(selectedGender==null)
+           return true;
+      return false;
+   }
   //----------------------------------------Email Validation----------------------------------------
 
   String? emailErrorMessage;
@@ -103,7 +126,10 @@ class _RegisterState extends State<Register> {
         isLoading=true;
         errorMessage=null;
       });
-      if(emailValidation(emailController.text.trim()) != null || passwordValidation(passwordController.text.trim()) != null  ){
+      if(nameValidation(nameController.text.trim()) != null ||
+          emailValidation(emailController.text.trim()) != null ||
+          passwordValidation(passwordController.text.trim()) != null ||
+           genderValidation()){
         setState(() {
           isLoading=false;
 
@@ -211,34 +237,66 @@ class _RegisterState extends State<Register> {
               ),
               SizedBox(height: heightBetweenWidgets,),
 
-              FittedBox(child: Text('Phone Number', style: KStyle.headerTextStyle)),
+
               //----------------------------------------Full Name----------------------------------------
+
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  FittedBox(child: Text('Full Name', style: KStyle.headerTextStyle)),
                   TextFieldCostume(
                     hint: 'Full Name',
 
                     preIcon: Icon(Icons.perm_identity_rounded),
-                    valueController: emailController, validationFunction: emailValidation,
+                    valueController: nameController, validationFunction: nameValidation,
                     onErrorChange: (value){
                       setState(() {
-                        emailErrorMessage=value;
+                        nameMessageError=value;
                       });
-                    }, errorFlag: emailFlag,
+                    }, errorFlag: nameFlag,
                   ),
                   SizedBox(height: heightBetweenWidgets,),
 
-                  if(emailErrorMessage!=null)
-                    Text(emailErrorMessage!,style: KStyle.errorMessageTextStyle,),
+                  if(nameMessageError!=null)
+                    Text(nameMessageError!,style: KStyle.errorMessageTextStyle,),
 
                 ],
               ),
               SizedBox(height: heightBetweenWidgets),
               //----------------------------------------Gender Selection----------------------------------------
+              Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  FittedBox(child: Text('Gender', style: KStyle.headerTextStyle)),
 
 
+                     Container(
+                       padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                       border: Border.all(color:genderValidation()? Colors.red : Colors.blue,width: 1),
+                          borderRadius: BorderRadius.circular(20)
+                        ),
+                       child: DropdownButton(
+                         borderRadius: BorderRadius.circular(20),
+                         isExpanded: true,
+                          hint: Text('Select Gender',style: KStyle.titleTextStyle,),
+                          value: selectedGender,
+                          items: ['Male' , 'Female'].map((String gender) {
+                              return DropdownMenuItem(
+                                
+                                value: gender,child: Text(gender),);
+                        }).toList(),
+                          onChanged: (value) {
+                          setState(() {
+                            selectedGender=value;
+                          });
+                        },),
+                     ),
 
+                ],
+              ),
+
+                 
               //----------------------------------------Date Picker----------------------------------------
               Text(
                 'BirthDay',
