@@ -10,6 +10,6 @@ class Order extends StatelessWidget {
       body: Center(
         child: Text('Order'),
       ),
-    );;
+    );
   }
 }
