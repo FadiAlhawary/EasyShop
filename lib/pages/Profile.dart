@@ -223,14 +223,6 @@ class _ProfileState extends State<Profile> {
                     FittedBox(
                       child: Text(data!['Name'], style: KStyle.titleTextStyle),
                     ),
-                    //------------------------------------------------------------Phone------------------------------------------------------------
-                    CostumeListTile(
-                      name: 'Phone',
-                      content:
-                          FirebaseAuth.instance.currentUser!.phoneNumber
-                              .toString(),
-                    ),
-
                     //------------------------------------------------------------Gender------------------------------------------------------------
                     CostumeListTile(
                       name: 'Gender',
