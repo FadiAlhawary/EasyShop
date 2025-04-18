@@ -13,20 +13,20 @@ class KStyle{
     color: Colors.black,
   );
   static const normalTextStyle=TextStyle(
-    fontSize: 25,
+    fontSize: 15,
     //color: Colors.black
   );
   static const errorMessageTextStyle=TextStyle(
     color: Colors.red,
-    fontSize: 15,
+    fontSize: 10,
     fontWeight: FontWeight.bold,
   );
   static const leadingTextStyle=TextStyle(
     color: Colors.grey,
-    fontSize: 30,
+    fontSize: 20,
   );
   static const titleTextStyle=TextStyle(
-    fontSize: 30,
+    fontSize: 20,
     fontWeight: FontWeight.bold,
 
   );
