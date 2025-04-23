@@ -119,6 +119,7 @@ class _LogInState extends State<LogIn> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextFieldCostume(
+
                     isNumber: false,
                     hint: 'Email',
                     preIcon: Icon(Icons.email_outlined),
@@ -142,6 +143,7 @@ class _LogInState extends State<LogIn> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextFieldCostume(
+
                     isNumber: false,
                     hint: 'PassWord',
                     preIcon: Icon(Icons.lock_outline),

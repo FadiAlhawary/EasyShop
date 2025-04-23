@@ -18,7 +18,7 @@ class TextFieldCostume extends StatefulWidget {
     required this.messageError,
     required this.isNumber,
     this. maxLetters,
-    this.maxLines,
+
   });
   final String hint;
   final Icon preIcon;
@@ -31,7 +31,7 @@ class TextFieldCostume extends StatefulWidget {
   final String? messageError;
   final bool isNumber;
   final int? maxLetters;
-  final int? maxLines;
+
 
   @override
   State<TextFieldCostume> createState() => _TextFieldCostumeState();
@@ -46,7 +46,7 @@ class _TextFieldCostumeState extends State<TextFieldCostume> {
       children: [
 
         TextField(
-          maxLines: widget.maxLines,
+
           maxLength: widget.maxLetters,
           inputFormatters: widget.isNumber? <TextInputFormatter>[
             FilteringTextInputFormatter.digitsOnly,

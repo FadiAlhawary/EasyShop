@@ -283,7 +283,7 @@ class _ProductsUploader extends State<ProductsUploader> {
 
               //------------------------------------------------------------Description------------------------------------------------------------
               TextFieldCostume(
-                maxLines: 1,
+
                 maxLetters: 200,
                 hint: 'Description',
                 preIcon: Icon(Icons.description_outlined),
