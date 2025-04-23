@@ -44,11 +44,11 @@ import 'WishList.dart';
                 },));
               }, child: Text('Order')),
 
-              FilledButton(onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return Category();
-                },));
-              }, child: Text('Category')),
+              // FilledButton(onPressed: () {
+              //   Navigator.push(context, MaterialPageRoute(builder: (context) {
+              //     return Cat();
+              //   },));
+              // }, child: Text('Category')),
 
               FilledButton(onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
