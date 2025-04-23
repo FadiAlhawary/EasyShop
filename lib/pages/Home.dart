@@ -56,11 +56,6 @@ import 'WishList.dart';
                 },));
               }, child: Text('Dashboard')),
 
-              FilledButton(onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return Productview();
-                },));
-              }, child: Text('Product View')),
 
               FilledButton(onPressed: () {
                 FirebaseAuth.instance.signOut();
