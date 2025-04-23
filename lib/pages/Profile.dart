@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easyshop/pages/Log_In.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
@@ -8,8 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-
-import '../data/Constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../data/constants.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -44,7 +45,6 @@ class _ProfileState extends State<Profile> {
   final dateController = TextEditingController();
   final confirmationPasswordController = TextEditingController();
   bool isPasswordHidden = true;
-
   bool _isPasswordVerified = false;
   String? _passwordError;
   //------------------------------------------------------------Date Picker------------------------------------------------------------
@@ -68,8 +68,12 @@ class _ProfileState extends State<Profile> {
     emailController.dispose();
     dateController.dispose();
     nameController.dispose();
+    confirmationPasswordController.dispose();
+    _isPasswordVerified=false;
+    _passwordError=null;
     super.dispose();
   }
+@override
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +81,7 @@ class _ProfileState extends State<Profile> {
     bool isLoadingProfile = false;
     Future<void> changeProfileImage() async {
       try {
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
         final imagesRef = await FirebaseStorage.instance
             .ref('images')
             .child('profileImage')
@@ -89,6 +94,7 @@ class _ProfileState extends State<Profile> {
             .collection('users')
             .doc(FirebaseAuth.instance.currentUser!.uid)
             .update({'profileImageUrl': imageURL});
+        await prefs.setString(KConstants.imageURLConstant, imageURL);
       } catch (e) {
         print(e);
       }
@@ -96,22 +102,25 @@ class _ProfileState extends State<Profile> {
 
     //------------------------------------------------------------Updater------------------------------------------------------------
     Future<void> informationUpdater() async {
-      final user = FirebaseAuth.instance.currentUser!;
+      final user =await FirebaseAuth.instance.currentUser!;
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
       //-----Name-----
       if (nameController.text.isNotEmpty) {
-        FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-          'Name': nameController.text.trim(),
+      await  FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'Name': nameController.text.trim()
+
         });
+        await prefs.setString(KConstants.userNameConstant, nameController.text.trim());
       }
       //-----BirthDay-----
       if (dateController.text.isNotEmpty) {
-        FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+       await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
           'DOB': dateController,
         });
       }
       //-----Email-----
       if (emailController.text.isNotEmpty) {
-        AuthCredential credential = EmailAuthProvider.credential(
+        AuthCredential credential =await EmailAuthProvider.credential(
           email: user.email.toString(),
           password: confirmationPasswordController.text.trim(),
         );
@@ -119,6 +128,10 @@ class _ProfileState extends State<Profile> {
         FirebaseAuth.instance.currentUser!.verifyBeforeUpdateEmail(
           emailController.text.trim(),
         );
+
+
+
+
         // await user.updateEmail(emailController.text.trim());
       }
     }
@@ -131,7 +144,7 @@ class _ProfileState extends State<Profile> {
           _passwordError = 'Password cannot be empty';
           _isPasswordVerified = false;
         });
-        print('empty false');
+
         return false;
       }
 
@@ -149,7 +162,7 @@ class _ProfileState extends State<Profile> {
           _passwordError = null;
           _isPasswordVerified = true;
         });
-        print(true);
+
         informationUpdater();
         return true;
       } on FirebaseAuthException catch (e) {
@@ -162,6 +175,7 @@ class _ProfileState extends State<Profile> {
     }
 
     return Scaffold(
+      appBar: AppBar(),
       body: StreamBuilder(
         stream:
             FirebaseFirestore.instance
@@ -171,17 +185,16 @@ class _ProfileState extends State<Profile> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
-
           }
-          //
-          // if (!snapshot.hasData || !snapshot.data!.exists) {
-          //   return Center(child: Text('User profile not found'));
-          // }
-          // final data = snapshot.data!.data();
-          //
-          // if (data == null) {
-          //   return Text('No data available');
-          // }
+
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return Center(child: Text('User profile not found'));
+          }
+          final data = snapshot.data!.data();
+
+          if (data == null) {
+            return Text('No data available');
+          }
           if (snapshot.hasData) {
             final data = snapshot.data!.data();
             print('data : ${data}');
@@ -207,7 +220,7 @@ class _ProfileState extends State<Profile> {
                           backgroundImage:
                               selectedImage != null
                                   ? FileImage(selectedImage!)
-                                  : snapshot.data!['profileImageUrl'] != null
+                                  : snapshot.data!['profileImageUrl'] != ''
                                   ? NetworkImage(
                                     snapshot.data!['profileImageUrl'],
                                   )
@@ -335,65 +348,70 @@ class _ProfileState extends State<Profile> {
                                       SizedBox(height: 10),
                                       StatefulBuilder(
                                         builder: (context, setState) {
-                                          return TextField(
-                                            controller:
-                                                confirmationPasswordController,
-                                            decoration: InputDecoration(
-                                              prefixIcon: Icon(
-                                                Icons.lock_open_outlined,
-                                              ),
-                                              hintText: 'Password',
-                                              border: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                borderSide: BorderSide(
-                                                  color:
-                                                      _isPasswordVerified
-                                                          ? Colors.red
-                                                          : Colors.blue,
+                                          return Column(
+                                            children: [
+                                              TextField(
+                                                controller:
+                                                    confirmationPasswordController,
+                                                decoration: InputDecoration(
+                                                  prefixIcon: Icon(
+                                                    Icons.lock_open_outlined,
+                                                  ),
+                                                  hintText: 'Password',
+                                                  border: OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(10),
+                                                    borderSide: BorderSide(
+                                                      color:
+                                                          _isPasswordVerified
+                                                              ? Colors.red
+                                                              : Colors.blue,
+                                                    ),
+                                                  ),
+                                                  enabledBorder: OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(20),
+                                                    borderSide: BorderSide(
+                                                      color:
+                                                          _isPasswordVerified
+                                                              ? Colors.red
+                                                              : Colors.blue,
+                                                    ),
+                                                  ),
+                                                  focusedBorder: OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(20),
+                                                    borderSide: BorderSide(
+                                                      color:
+                                                          _isPasswordVerified
+                                                              ? Colors.red
+                                                              : Colors.blue,
+                                                    ),
+                                                  ),
+                                              
+                                                  suffixIcon: IconButton(
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        isPasswordHidden =
+                                                            !isPasswordHidden;
+                                                      });
+                                                    },
+                                                    icon:
+                                                        isPasswordHidden
+                                                            ? Icon(
+                                                              Icons
+                                                                  .visibility_outlined,
+                                                            )
+                                                            : Icon(
+                                                              Icons
+                                                                  .visibility_off_outlined,
+                                                            ),
+                                                  ),
                                                 ),
+                                                obscureText: isPasswordHidden,
                                               ),
-                                              enabledBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                borderSide: BorderSide(
-                                                  color:
-                                                      _isPasswordVerified
-                                                          ? Colors.red
-                                                          : Colors.blue,
-                                                ),
-                                              ),
-                                              focusedBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                borderSide: BorderSide(
-                                                  color:
-                                                      _isPasswordVerified
-                                                          ? Colors.red
-                                                          : Colors.blue,
-                                                ),
-                                              ),
-
-                                              suffixIcon: IconButton(
-                                                onPressed: () {
-                                                  setState(() {
-                                                    isPasswordHidden =
-                                                        !isPasswordHidden;
-                                                  });
-                                                },
-                                                icon:
-                                                    isPasswordHidden
-                                                        ? Icon(
-                                                          Icons
-                                                              .visibility_outlined,
-                                                        )
-                                                        : Icon(
-                                                          Icons
-                                                              .visibility_off_outlined,
-                                                        ),
-                                              ),
-                                            ),
-                                            obscureText: isPasswordHidden,
+                                              Text(_passwordError!=null ? _passwordError! : ''),
+                                            ],
                                           );
                                         },
                                       ),
@@ -402,10 +420,10 @@ class _ProfileState extends State<Profile> {
                                       Padding(
                                         padding: const EdgeInsets.all(10.0),
 
+                                        //------------------------------------------------------------Confirmation => Cancel------------------------------------------------------------
                                         child: Row(
                                           //mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            //------------------------------------------------------------Confirmation => Cancel------------------------------------------------------------
                                             Expanded(
                                               child: SizedBox(
                                                 height: 50,
@@ -439,12 +457,16 @@ class _ProfileState extends State<Profile> {
                                                     backgroundColor:
                                                         Colors.lightBlue[700],
                                                   ),
-                                                  onPressed: () {
-                                                    verifyPassword(
+                                                  onPressed: () async {
+                                                    if (await verifyPassword(
                                                       confirmationPasswordController
                                                           .text
                                                           .trim(),
-                                                    );
+                                                    )) {
+                                                      Navigator.pop(context);
+
+
+                                                    }
                                                   },
                                                   child: Text('SAVE'),
                                                 ),
@@ -482,6 +504,14 @@ class _ProfileState extends State<Profile> {
                         ),
                         onPressed: () {
                           FirebaseAuth.instance.signOut();
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return LogIn();
+                              },
+                            ),
+                          );
                         },
 
                         child: Row(

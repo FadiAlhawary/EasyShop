@@ -1,8 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easyshop/widgets/tree_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import '../data/Constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../data/constants.dart';
+import '../widgets/Text_Field_Costume.dart';
 import 'Registration.dart';
 
 class LogIn extends StatefulWidget {
@@ -63,6 +66,17 @@ class _LogInState extends State<LogIn> {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: emailController.text.trim(),
           password: passwordController.text.trim());
+        final docRef = await FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid);
+        final docSnapShot=await docRef.get();
+        if(docSnapShot.exists){
+          final data = docSnapShot.data();
+          final SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString(KConstants.userNameConstant, data!['Name']);
+          await prefs.setString(KConstants.imageURLConstant, data['profileImageUrl']);
+
+
+        }
+
 
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
         return WidgetTree(); // Replace with your home screen
@@ -105,6 +119,7 @@ class _LogInState extends State<LogIn> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextFieldCostume(
+                    isNumber: false,
                     hint: 'Email',
                     preIcon: Icon(Icons.email_outlined),
                     valueController: emailController, validationFunction: emailValidation,
@@ -112,12 +127,9 @@ class _LogInState extends State<LogIn> {
                       setState(() {
                         emailErrorMessage=value;
                       });
-                    }, errorFlag: emailFlag,
+                    }, errorFlag: emailFlag, messageError: emailErrorMessage,
                   ),
                   SizedBox(height: heightBetweenWidgets,),
-
-                  if(emailErrorMessage!=null)
-                    Text(emailErrorMessage!,style: KStyle.errorMessageTextStyle,),
 
                 ],
               ),
@@ -130,6 +142,7 @@ class _LogInState extends State<LogIn> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextFieldCostume(
+                    isNumber: false,
                     hint: 'PassWord',
                     preIcon: Icon(Icons.lock_outline),
                     sufIconUnpressed: Icon(Icons.visibility_off_outlined),
@@ -139,12 +152,10 @@ class _LogInState extends State<LogIn> {
                       setState(() {
                         passwordErrorMessage=value;
                       });
-                    },
+                    }, messageError: passwordErrorMessage,
                   ),
                   SizedBox(height: heightBetweenWidgets,),
 
-                  if(passwordErrorMessage!=null)
-                    Text(passwordErrorMessage!,style: KStyle.errorMessageTextStyle,),
                 ],
               ),
               SizedBox(height: heightBetweenWidgets,),
