@@ -1,3 +1,4 @@
+import 'package:easyshop/pages/Cart.dart';
 import 'package:easyshop/pages/Category.dart';
 import 'package:easyshop/pages/Dashboard.dart';
 import 'package:easyshop/pages/Order.dart';
@@ -11,6 +12,7 @@ import 'WishList.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
+
 
   @override
   Widget build(BuildContext context) {

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-
+ class KConstants{
+   static const String userNameConstant='userNameConstant';
+   static const String imageURLConstant='imageURLConstant';
+   static const String lightModeSwitchConstant='lightModeSwitchConstant';
+ }
 class KStyle{
   static const TextStyle headerTextStyle=TextStyle(
     fontSize: 40,
