@@ -4,7 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../data/constants.dart';
+import '../widgets/Text_Field_Costume.dart';
 import 'Log_In.dart';
 
 class Register extends StatefulWidget {
@@ -32,8 +34,8 @@ class _RegisterState extends State<Register> {
     DateTime? picked = await showDatePicker(
       context: context,
       firstDate: DateTime(1940),
-      lastDate: DateTime(2100),
-      initialDate: DateTime.now(),
+      lastDate: DateTime(2015),
+      initialDate:  DateTime(2000, 1, 1),
     );
     if (picked != null) {
       dateController.text = picked.toString().split(" ")[0];
@@ -146,11 +148,14 @@ class _RegisterState extends State<Register> {
 
             final firestore = await FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid);
             firestore.set({
-              'Name' : 'Fadi ',
-               'DOB' : DateTime.now(),
-               'Gender':true,
-               'profileImageUrl':'asasd',
+              'Name' : nameController.text.trim(),
+              'DOB': DateTime.parse(dateController.text.trim()),
+               'Gender': selectedGender=='Male'?true :false,
+               'profileImageUrl':'',
             });
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString(KConstants.userNameConstant, nameController.text.trim());
+        await prefs.setString(KConstants.imageURLConstant,'');
 
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
                return WidgetTree();
@@ -193,6 +198,7 @@ class _RegisterState extends State<Register> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextFieldCostume(
+                    isNumber: false,
                     hint: 'Email',
                     preIcon: Icon(Icons.email_outlined),
                     valueController: emailController, validationFunction: emailValidation,
@@ -200,12 +206,9 @@ class _RegisterState extends State<Register> {
                       setState(() {
                         emailErrorMessage=value;
                       });
-                    }, errorFlag: emailFlag,
+                    }, errorFlag: emailFlag, messageError: emailErrorMessage,
                   ),
                   SizedBox(height: heightBetweenWidgets,),
-
-                  if(emailErrorMessage!=null)
-                    Text(emailErrorMessage!,style: KStyle.errorMessageTextStyle,),
 
                 ],
               ),
@@ -218,6 +221,7 @@ class _RegisterState extends State<Register> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextFieldCostume(
+                    isNumber: false,
                     hint: 'PassWord',
                     preIcon: Icon(Icons.lock_outline),
                     sufIconUnpressed: Icon(Icons.visibility_off_outlined),
@@ -227,12 +231,10 @@ class _RegisterState extends State<Register> {
                       setState(() {
                         passwordErrorMessage=value;
                       });
-                    },
+                    }, messageError: passwordErrorMessage,
                   ),
                   SizedBox(height: heightBetweenWidgets,),
 
-                  if(passwordErrorMessage!=null)
-                    Text(passwordErrorMessage!,style: KStyle.errorMessageTextStyle,),
                 ],
               ),
               SizedBox(height: heightBetweenWidgets,),
@@ -253,12 +255,10 @@ class _RegisterState extends State<Register> {
                       setState(() {
                         nameMessageError=value;
                       });
-                    }, errorFlag: nameFlag,
+                    }, errorFlag: nameFlag, messageError: nameMessageError, isNumber: false,
                   ),
                   SizedBox(height: heightBetweenWidgets,),
 
-                  if(nameMessageError!=null)
-                    Text(nameMessageError!,style: KStyle.errorMessageTextStyle,),
 
                 ],
               ),
@@ -352,85 +352,6 @@ class _RegisterState extends State<Register> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class TextFieldCostume extends StatefulWidget {
-  const TextFieldCostume({
-    super.key,
-    required this.hint,
-    required this.preIcon,
-    this.sufIconUnpressed,
-    this.sufIconPressed,
-    required this.valueController,
-    required this.validationFunction,
-    this.onErrorChange,
-    required this.errorFlag,
-  });
-  final String hint;
-  final Icon preIcon;
-  final Icon? sufIconUnpressed;
-  final Icon? sufIconPressed;
-  final TextEditingController valueController;
-  final Function validationFunction;
-  final Function(String?)? onErrorChange;
-  final bool errorFlag;
-
-  @override
-  State<TextFieldCostume> createState() => _TextFieldCostumeState();
-}
-
-class _TextFieldCostumeState extends State<TextFieldCostume> {
-  bool isPressed = false;
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      onChanged: (value) {
-        setState(() {
-          final error= widget.validationFunction(value);
-          if(widget.onErrorChange!=null){
-            widget.onErrorChange!(error);
-          }
-          setState(() { });
-        });
-      },
-      controller: widget.valueController,
-      decoration: InputDecoration(
-        border: OutlineInputBorder(
-
-          borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(color: widget.errorFlag? Colors.red : Colors.blue),
-
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(color: widget.errorFlag? Colors.red : Colors.blue),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(color: widget.errorFlag? Colors.red : Colors.blue),
-        ),
-        hintText: widget.hint ,
-        hintStyle: KStyle.normalTextStyle,
-        prefixIcon: widget.preIcon,
-        suffixIcon:
-        widget.sufIconUnpressed != null
-            ? IconButton(
-          onPressed: () {
-            setState(() {
-              isPressed = !isPressed;
-            });
-          },
-          icon:
-          isPressed
-              ? widget.sufIconPressed!
-              : widget.sufIconUnpressed!,
-        )
-            : null,
-      ),
-      obscureText: (widget.sufIconUnpressed != null) ? !isPressed : false,
-
     );
   }
 }
