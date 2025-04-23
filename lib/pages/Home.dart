@@ -1,3 +1,4 @@
+import 'package:easyshop/pages/Cart.dart';
 import 'package:easyshop/pages/Category.dart';
 import 'package:easyshop/pages/Dashboard.dart';
 import 'package:easyshop/pages/Order.dart';
@@ -29,7 +30,7 @@ import 'WishList.dart';
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
                   return Cart();
                 },));
-              }, child: Text('Cart')),
+              }, child: Text('carts')),
 
               FilledButton(onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
