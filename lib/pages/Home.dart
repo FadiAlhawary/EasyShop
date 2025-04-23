@@ -35,6 +35,13 @@ class Home extends StatelessWidget {
               child: Text('Products'),
             ),
 
+
+              // FilledButton(onPressed: () {
+              //   Navigator.push(context, MaterialPageRoute(builder: (context) {
+              //     return Cat();
+              //   },));
+              // }, child: Text('Category')),
+
             FilledButton(
               onPressed: () {
                 Navigator.push(
@@ -48,6 +55,7 @@ class Home extends StatelessWidget {
               },
               child: Text('Cart'),
             ),
+
 
             FilledButton(
               onPressed: () {
@@ -76,6 +84,7 @@ class Home extends StatelessWidget {
               },
               child: Text('Order'),
             ),
+
 
             FilledButton(
               onPressed: () {
