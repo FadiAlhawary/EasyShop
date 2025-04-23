@@ -1,65 +1,130 @@
+import 'package:easyshop/data/constants.dart';
 import 'package:flutter/material.dart';
+// Import the constants file
 
-class Cart extends StatelessWidget {
+class Cart extends StatefulWidget {
   const Cart({super.key});
+
+  @override
+  _CartState createState() => _CartState(); // Add State class
+}
+
+class _CartState extends State<Cart> {
+  // Sample data for cart items
+  final List<Map<String, dynamic>> _cartItems = [
+    {
+      'brand': 'Scarlett',
+      'productName': 'Scarlett Whitening Brightly Serum',
+      'price': 10.3,
+      'quantity': 1,
+    },
+    {
+      'brand': 'Ponds',
+      'productName': 'Ponds White Series',
+      'details': '4 Products',
+      'price': 21.93,
+      'quantity': 1,
+    },
+    {
+      'brand': 'Emina',
+      'productName': 'Emina Bright Stuff Face Serum',
+      'price': 11.56,
+      'quantity': 2,
+    },
+  ];
+
+  // Function to handle quantity changes
+  void _updateQuantity(int index, int newQuantity) {
+    setState(() {
+      if (newQuantity > 0) {
+        _cartItems[index]['quantity'] = newQuantity;
+      } else {
+        // Remove the item if the quantity is reduced to zero
+        _cartItems.removeAt(index);
+      }
+    });
+  }
+
+  // Function to clear the entire cart
+  void _clearCart() {
+    setState(() {
+      _cartItems.clear();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios),
+          icon: const Icon(Icons.arrow_back_ios),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
-        title: Text('Cart'),
+        title: const Text('Cart'),
         actions: [
           IconButton(
-            icon: Icon(Icons.delete_outline),
+            icon: const Icon(Icons.delete_outline),
             onPressed: () {
-              // Handle delete cart action
+              // Show a confirmation dialog before clearing the cart
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Clear Cart', style: KStyle.titleTextStyle,),
+                  content: Text('Are you sure you want to clear your cart?',style: KStyle.normalTextStyle),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(), // Cancel
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        _clearCart(); // Clear the cart
+                        Navigator.of(context).pop(); // Close the dialog
+                      },
+                      child: const Text('Clear'),
+                    ),
+                  ],
+                ),
+              );
             },
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
+      body: _cartItems.isEmpty
+          ? const Center(
+              child: Text('Your cart is empty.'),
+            )
+          : Column(
               children: [
-                _buildCartItem(
-                  brand: 'Scarlett',
-                  productName: 'Scarlett Whitening Brightly Serum',
-                  price: 10.3,
-                  quantity: 1,
-                  onQuantityChanged: (newQuantity) {},
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _cartItems.length,
+                    itemBuilder: (context, index) {
+                      final item = _cartItems[index];
+                      return _buildCartItem(
+                        index: index,
+                        brand: item['brand'],
+                        productName: item['productName'],
+                        details: item['details'],
+                        price: item['price'],
+                        quantity: item['quantity'],
+                        onQuantityChanged: (newQuantity) {
+                          _updateQuantity(index, newQuantity);
+                        },
+                      );
+                    },
+                  ),
                 ),
-                _buildCartItem(
-                  brand: 'Ponds',
-                  productName: 'Ponds White Series',
-                  details: '4 Products',
-                  price: 21.93,
-                  quantity: 1,
-                  onQuantityChanged: (newQuantity) {},
-                ),
-                _buildCartItem(
-                  brand: 'Emina',
-                  productName: 'Emina Bright Stuff Face Serum',
-                  price: 11.56,
-                  quantity: 2,
-                  onQuantityChanged: (newQuantity) {},
-                ),
+                _buildBottomBar(context),
               ],
             ),
-          ),
-          _buildBottomBar(context),
-        ],
-      ),
     );
   }
 
   Widget _buildCartItem({
+    required int index, // Add index
     required String brand,
     required String productName,
     String? details,
@@ -85,17 +150,17 @@ class Cart extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(brand, style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text('view brand', style: TextStyle(color: Colors.grey)),
+                    Text(brand, style: KStyle.titleTextStyle), // Use titleTextStyle
+                    const Text('view brand', style: TextStyle(color: Colors.grey)),
                   ],
                 ),
-                Text(productName),
+                Text(productName, style: KStyle.normalTextStyle,), // Use normalTextStyle
                 if (details != null)
-                  Text(details, style: TextStyle(color: Colors.grey)),
+                  Text(details, style: const TextStyle(color: Colors.grey)),
                 const SizedBox(height: 8),
                 Text(
                   '\$${price.toStringAsFixed(2)}',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: KStyle.titleTextStyle, // Use titleTextStyle
                 ),
               ],
             ),
@@ -113,9 +178,7 @@ class Cart extends StatelessWidget {
               const SizedBox(height: 4),
               InkWell(
                 onTap: () {
-                  if (quantity > 1) {
-                    onQuantityChanged(quantity - 1);
-                  }
+                  onQuantityChanged(quantity - 1);
                 },
                 child: const Icon(Icons.remove, size: 16),
               ),
@@ -127,6 +190,11 @@ class Cart extends StatelessWidget {
   }
 
   Widget _buildBottomBar(BuildContext context) {
+    double totalPrice = 0;
+    for (var item in _cartItems) {
+      totalPrice += item['price'] * item['quantity']; // Calculate total
+    }
+
     return Container(
       color: Colors.grey[100],
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -134,12 +202,12 @@ class Cart extends StatelessWidget {
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text('Amount Price', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
+            children: [
+              Text('Total Price', style: KStyle.titleTextStyle), // Use titleTextStyle
+              const SizedBox(height: 4),
               Text(
-                '\$55.08',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                '\$${totalPrice.toStringAsFixed(2)}',
+                style: KStyle.headerTextStyle.copyWith(fontSize: 18), // Use headerTextStyle
               ),
             ],
           ),
@@ -147,28 +215,48 @@ class Cart extends StatelessWidget {
           FilledButton(
             onPressed: () {
               // Handle checkout
+              if (_cartItems.isNotEmpty) {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Checkout', style: KStyle.titleTextStyle),
+                    content: Text('Proceed to checkout?', style: KStyle.normalTextStyle),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          // Implement checkout logic here (e.g., send order, clear cart)
+                          // For now, just show a message and clear the cart
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Order placed successfully!'),
+                            ),
+                          );
+                          _clearCart(); // Clear the cart after checkout
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Confirm'),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Your cart is empty.')),
+                );
+              }
             },
             style: FilledButton.styleFrom(
               backgroundColor: Colors.black,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: Row(
-              children: const [
-                Text(
-                  'Check Out',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-                SizedBox(width: 8),
-                CircleAvatar(
-                  backgroundColor: Colors.white,
-                  radius: 12,
-                  child: Text(
-                    '4',
-                    style: TextStyle(color: Colors.black, fontSize: 12),
-                  ),
-                ),
-              ],
+            child: const Text(
+              'Check Out',
+              style: TextStyle(color: Colors.white, fontSize: 16),
             ),
           ),
         ],
@@ -176,3 +264,4 @@ class Cart extends StatelessWidget {
     );
   }
 }
+
