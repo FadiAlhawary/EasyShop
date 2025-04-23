@@ -1,7 +1,5 @@
 import 'package:easyshop/data/constants.dart';
 import 'package:flutter/material.dart';
-// Import the constants file
-
 class Cart extends StatefulWidget {
   const Cart({super.key});
 
@@ -264,4 +262,5 @@ class _CartState extends State<Cart> {
     );
   }
 }
+
 
