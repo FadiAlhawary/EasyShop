@@ -9,6 +9,7 @@ class ProductCardWidget extends StatefulWidget {
     required this.description,
     required this.inWishList,
     required this.destination,
+    required this.isOwner,
   });
   final String tag;
   final String imageURL;
@@ -17,6 +18,7 @@ class ProductCardWidget extends StatefulWidget {
   final String description;
   final bool inWishList;
   final Widget destination;
+  final bool isOwner;
   @override
   State<ProductCardWidget> createState() => _ProductCardWidgetState();
 }
@@ -25,6 +27,7 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+
       onTap: () {
       Navigator.push(context, MaterialPageRoute(builder: (context) => widget.destination,));
       },
@@ -45,7 +48,7 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
                     tag: widget.tag,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
-                      child: Image.asset(
+                      child: Image.network(
                         widget.imageURL,
                         height: 120, // Smaller image height
                         width: double.infinity,
@@ -88,23 +91,20 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
                     ],
                   ),
                 ),
-                Align(
+                !widget.isOwner
+                    ? Align(
                   alignment: Alignment.topRight,
                   child: IconButton(
                     icon: Icon(
-                      widget.inWishList
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      color:
-                      widget.inWishList
-                          ? Colors.red
-                          : Colors.grey,
+                      widget.inWishList ? Icons.favorite : Icons.favorite_border,
+                      color: widget.inWishList ? Colors.red : Colors.grey,
                     ),
                     onPressed: () {
-
+                      // Handle favorite toggle
                     },
                   ),
-                ),
+                )
+                    : SizedBox.shrink(),
               ],
             ),
           ),

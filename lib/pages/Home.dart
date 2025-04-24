@@ -117,20 +117,20 @@ class Home extends StatelessWidget {
               },
               child: Text('Dashboard'),
             ),
-
-            FilledButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return ProductView(product: {});
-                    },
-                  ),
-                );
-              },
-              child: Text('Product View'),
-            ),
+            //
+            // FilledButton(
+            //   onPressed: () {
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(
+            //         builder: (context) {
+            //           return ProductView(product: {});
+            //         },
+            //       ),
+            //     );
+            //   },
+            //   child: Text('Product View'),
+            // ),
 
             FilledButton(
               onPressed: () {
