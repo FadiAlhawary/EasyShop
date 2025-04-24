@@ -1,6 +1,7 @@
 import 'package:easyshop/data/Constants.dart';
 import 'package:easyshop/data/Notifiers.dart';
 import 'package:easyshop/pages/Home.dart';
+import 'package:easyshop/pages/Products.dart';
 import 'package:easyshop/pages/Profile.dart';
 import 'package:easyshop/widgets/Settings_Tree.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,7 @@ import 'Navigation_widget.dart';
   State<WidgetTree> createState() => _WidgetTreeState();
 }
 List<Widget> pages =[
-  Home(),
+  Products(),
   SettingsTree(),
 ];
 class _WidgetTreeState extends State<WidgetTree> {
