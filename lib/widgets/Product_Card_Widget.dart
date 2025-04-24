@@ -13,7 +13,7 @@ class ProductCardWidget extends StatefulWidget {
   final String tag;
   final String imageURL;
   final String productName;
-  final int productPrice;
+  final String productPrice;
   final String description;
   final bool inWishList;
   final Widget destination;
@@ -67,7 +67,7 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
                           color: Colors.black87,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: 10),
                       Text(
                         "\$${widget.productPrice}",
                         style: TextStyle(
@@ -76,15 +76,14 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      SizedBox(height: 4),
-                      FittedBox(
-                        child: Text(
+                      SizedBox(height: 20),
+                      Text(
                           widget.description,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: KStyle.normalTextStyle
                           ),
-                      ),
+
 
                     ],
                   ),

@@ -25,7 +25,7 @@ class _ProductsState extends State<Products> {
   List<Map<String, dynamic>> productList = [
     {
       'name': 'Adidas UltraBoost',
-      'price': 150,
+      'price': '150',
       'image': 'assets/images/adidas_ultraboost.png',
       'brand': 'Adidas',
       'sizes': ['38', '40', '44'],
@@ -36,7 +36,7 @@ class _ProductsState extends State<Products> {
     },
     {
       'name': 'Zara Jacket',
-      'price': 80,
+      'price': '80',
       'image': 'assets/images/zara_jacket.png',
       'brand': 'Zara',
       'sizes': ['S', 'M', 'L', 'XL'],
@@ -47,7 +47,7 @@ class _ProductsState extends State<Products> {
     },
     {
       'name': 'Apple Watch',
-      'price': 250,
+      'price': '250',
       'image': 'assets/images/apple_watch.png',
       'brand': 'Apple',
       'sizes': [],
@@ -58,7 +58,7 @@ class _ProductsState extends State<Products> {
     },
     {
       'name': 'Samsung Buds',
-      'price': 100,
+      'price': '100',
       'image': 'assets/images/samsung_buds.png',
       'brand': 'Samsung',
       'sizes': [],
@@ -69,7 +69,7 @@ class _ProductsState extends State<Products> {
     },
     {
       'name': 'Huawei P30',
-      'price': 220,
+      'price': '220',
       'image': 'assets/images/huawei_p30.png',
       'brand': 'Huawei',
       'sizes': [],
@@ -80,7 +80,7 @@ class _ProductsState extends State<Products> {
     },
     {
       'name': 'Nike Air Max',
-      'price': 120,
+      'price': "120",
       'image': 'assets/images/nike_air_max.png',
       'brand': 'Nike',
       'sizes': ['36', '38', '40', '42'],
@@ -91,7 +91,7 @@ class _ProductsState extends State<Products> {
     },
     {
       'name': 'Karen Wazen Glasses',
-      'price': 90,
+      'price': '90',
       'image': 'assets/images/karen_wazen_glasses.png',
       'brand': 'Karen Wazen',
       'sizes': [],
@@ -102,7 +102,7 @@ class _ProductsState extends State<Products> {
     },
     {
       'name': 'Aloe Lab Serum',
-      'price': 60,
+      'price': '60',
       'image': 'assets/images/aloe_lab_serum.png',
       'brand': 'The Aloe Lab',
       'sizes': [],
@@ -113,7 +113,7 @@ class _ProductsState extends State<Products> {
     },
     {
       'name': 'Khouzami Lipstick',
-      'price': 45,
+      'price': '45',
       'image': 'assets/images/khouzami_lipstick.png',
       'brand': 'Samer Khouzami',
       'sizes': [],
@@ -124,7 +124,7 @@ class _ProductsState extends State<Products> {
     },
     {
       'name': 'Nike T-shirt',
-      'price': 30,
+      'price': '30',
       'image': 'assets/images/nike_tshirt.png',
       'brand': 'Nike',
       'sizes': ['XS', 'M', 'XL'],
@@ -223,7 +223,7 @@ class _ProductsState extends State<Products> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 8,
                 mainAxisSpacing: 9,
-                childAspectRatio: 0.6, // Slightly taller
+               // childAspectRatio: 0.6, // Slightly taller
               ),
               itemCount: filteredProducts.length,
               itemBuilder: (context, index) {
