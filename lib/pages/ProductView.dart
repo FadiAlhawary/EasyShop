@@ -244,7 +244,7 @@ class _ProductViewState extends State<ProductView> {
          }
 
          if (snapshot.data == null || snapshot.data!.docs.isEmpty) {
-           return Center(child: Lottie.asset('assets/lotties/empty.json'));//cahnge lottie
+           return Center(child: Lottie.asset('assets/lotties/emptyComment.json'));//cahnge lottie
          }
          if(snapshot.hasData){
            final reviewsData = snapshot.data!.docs;
