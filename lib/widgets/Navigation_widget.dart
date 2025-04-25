@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
       return ValueListenableBuilder(valueListenable: selectedPageNotifier, builder: (context, selectedPage, child) {
           return NavigationBar(destinations: [
             NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
-            NavigationDestination(icon: Icon(Icons.person), label: 'Profile'),
+            NavigationDestination(icon: Icon(Icons.settings), label: 'Setting'),
           ],
             onDestinationSelected: (value) {
              selectedPageNotifier.value=value;

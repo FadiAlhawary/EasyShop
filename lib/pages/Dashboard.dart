@@ -58,7 +58,7 @@ class _DashboardState extends State<Dashboard> {
                   productPrice: product['Price'],
                   description: product['Description'],
                   inWishList: false,
-                  destination: ProductView(productUID: 'adasd',),
+                  destination: ProductView(productUID: data[index].id,),
                   isOwner: true,
                 );
                 // return Center(child: Text(product['Name']),);
