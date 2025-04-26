@@ -68,12 +68,20 @@ class ProfileListTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage:
-                      profileImageNetwork != ''
-                          ? NetworkImage(profileImageNetwork)
-                          : AssetImage(profileImageAsset),
+                ClipRRect(
+
+                  child:
+                  profileImageNetwork.isNotEmpty?
+                       Image.network(
+                    profileImageNetwork,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.asset(
+                        'assets/images/no-connection.jpg', // Your offline fallback image
+                        fit: BoxFit.cover,
+                      );
+                    },
+                  )  : Image.asset(profileImageAsset),
                 ),
 
                 Padding(

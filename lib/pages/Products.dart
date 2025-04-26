@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easyshop/widgets/Product_Card_Widget.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'ProductView.dart';
@@ -131,8 +132,10 @@ class _ProductsState extends State<Products> {
                       productName: product['Name'],
                       productPrice: product['Price'],
                       description: product['Description'],
-                      inWishList: false,
+
                       destination: ProductView(productUID: data[index].id,),
+                      productUID: data[index].id,
+                      userUID: FirebaseAuth.instance.currentUser!.uid,
                       isOwner: false,
                     );
                     // return Center(child: Text(product['Name']),);

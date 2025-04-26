@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easyshop/data/Constants.dart';
+import 'package:easyshop/pages/Products.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -18,9 +19,12 @@ class _ProductViewState extends State<ProductView> {
   String? selectedSize;
   TextEditingController commentController = TextEditingController();
   double rating = 0;
- bool isInWishlist=false;
+ bool inWishList=false;
   bool isLoggedIn = true;
+  bool isLoading=false;
+  bool inCart=false;
   List<Map<String, dynamic>> reviews = [];
+
   //----------------------------------------Adding reviews----------------------------------------
  Future<void> addReviews()async{
     try{
@@ -37,6 +41,130 @@ class _ProductViewState extends State<ProductView> {
     }
 
  }
+  //----------------------------------------isInCart----------------------------------------
+      Future<void> isInCart()async{
+        setState(() {
+          isLoading=true;
+        });
+   try{
+     final userUID = await FirebaseAuth.instance.currentUser!.uid;
+     final cartRef=await FirebaseFirestore.instance.collection('cart').where('userId' ,isEqualTo: userUID).where('productId',isEqualTo: widget.productUID).get();
+
+         if(cartRef.docs.isNotEmpty){
+           setState(() {
+             inCart=true;
+           });
+         }else{
+           setState(() {
+             inCart=false;
+           });
+         }
+
+   }
+             catch(e){
+               print(e);
+             }finally{
+     isLoading=false;
+   }
+
+      }
+  //----------------------------------------toCart----------------------------------------
+  Future<void> toCart()async{
+setState(() {
+  isLoading=true;
+});
+    try{
+      final cartRef=await FirebaseFirestore.instance.collection('cart');
+      final userUID = await FirebaseAuth.instance.currentUser!.uid;
+
+      if(!inWishList){
+        await cartRef.add({
+          'userId':userUID,
+          'productId':widget.productUID,
+        });
+
+      }
+      else{
+        final productRef =  await cartRef.where('userId' ,isEqualTo: userUID).where('productId',isEqualTo: widget.productUID).get();
+        for (var doc in productRef.docs) {
+          await doc.reference.delete();
+        }
+        setState(() {
+          inCart=false;
+        });
+      }
+      isInCart();
+    }catch(e){
+      print(e);
+    }
+    finally{
+      setState(() {
+        isLoading=false;
+      });
+    }
+  }
+  //----------------------------------------isInWishList----------------------------------------
+  Future<void> isInWishList()async{
+    setState(() {
+      isLoading=true;
+    });
+    try{
+      final userUID = await FirebaseAuth.instance.currentUser!.uid;
+
+      final wishListRef=await FirebaseFirestore.instance.collection('wishList').where('userId' ,isEqualTo: userUID).where('productId',isEqualTo: widget.productUID).get();
+      if(wishListRef.docs.isNotEmpty){
+        setState(() {
+          inWishList=true;
+        });
+      }
+      else{
+        inWishList=false;
+      }
+
+
+    }catch(e){
+      print(e);
+    }
+    finally{
+      setState(() {
+        isLoading=false;
+      });
+    }
+  }
+//----------------------------------------toWishList----------------------------------------
+  Future<void> toWishList()async{
+
+    try{
+      final wishListRef=await FirebaseFirestore.instance.collection('wishList');
+      final userUID = await FirebaseAuth.instance.currentUser!.uid;
+
+      if(!inWishList){
+        await wishListRef.add({
+          'userId':userUID,
+          'productId':widget.productUID,
+        });
+
+      }
+      else{
+        final productRef =  await wishListRef.where('userId' ,isEqualTo: userUID).where('productId',isEqualTo: widget.productUID).get();
+        for (var doc in productRef.docs) {
+          await doc.reference.delete();
+        }
+        setState(() {
+          inWishList=false;
+        });
+      }
+      isInWishList();
+    }catch(e){
+      print(e);
+    }
+  }
+  @override
+  void initState() {
+    // TODO: implement initState
+    isInWishList();
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     // final product = widget.product;
@@ -44,15 +172,15 @@ class _ProductViewState extends State<ProductView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("product['Name']",style: KStyle.titleTextStyle,),
+        title: Text('',style: KStyle.titleTextStyle,),
         centerTitle: true,
-        //backgroundColor: Colors.grey[800],
+
       ),
       body:StreamBuilder(stream: 
           FirebaseFirestore.instance.collection('products').doc(widget.productUID).snapshots()
           , builder: (context, snapshot) {
                 if(snapshot.connectionState==ConnectionState.waiting){
-                  return Center(child:CircularProgressIndicator(),);
+                  return Center(child:Lottie.asset('assets/lotties/loadingPage.json'));
                 }
 
   if (snapshot.data == null || !snapshot.data!.exists) {
@@ -104,17 +232,15 @@ class _ProductViewState extends State<ProductView> {
 
           IconButton(
             icon: Icon(
-              isInWishlist ? Icons.favorite : Icons.favorite_border,
+              inWishList ? Icons.favorite : Icons.favorite_border,
               color:
-              isInWishlist
+              inWishList
                   ? Colors.red
                   : const Color.fromARGB(255, 171, 170, 170),
               size: 32,
             ),
             onPressed: () {
-              setState(() {
-                isInWishlist = !isInWishlist;
-              });
+             toWishList();
             },
           ),
           const SizedBox(height: 20),
@@ -151,9 +277,11 @@ class _ProductViewState extends State<ProductView> {
           ],
 
           ElevatedButton.icon(
-            onPressed: () {},
+            onPressed: () {
+              toCart();
+            },
             icon: const Icon(Icons.shopping_cart),
-            label: const Text("Add to Cart"),
+            label:  Text(inCart? "In Cart" :  "Add to Cart"),
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(200, 50),
               backgroundColor: const Color.fromARGB(255, 171, 170, 170),
@@ -280,7 +408,7 @@ class _ProductViewState extends State<ProductView> {
                             children: [
                               CircleAvatar(
                                 radius: 20,
-                                backgroundImage: userData!['profileImageUrl'] == ''? AssetImage('assets/images/noPerson.jpg') : NetworkImage(userData!['profileImageUrl']),
+                                backgroundImage: userData!['profileImageUrl'] == ''? AssetImage('assets/images/noPerson.jpg') : NetworkImage(userData['profileImageUrl']),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -288,7 +416,7 @@ class _ProductViewState extends State<ProductView> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "${userData!['Name']}",
+                                      "${userData['Name']}",
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
