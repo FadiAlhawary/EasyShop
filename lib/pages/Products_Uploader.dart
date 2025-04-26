@@ -24,12 +24,14 @@ class _ProductsUploader extends State<ProductsUploader> {
   final descriptionController = TextEditingController();
   final priceController = TextEditingController();
   final quantityController = TextEditingController();
+  final sizeController = TextEditingController();
   String? categoryValue;
   double height = 20;
   List<File> selectedImages = [];
-  List<String> uploadedImagesUrl=[];
+  List<String> uploadedImagesUrl = [];
   bool isLoading = false;
-  var uuid=Uuid();
+  var uuid = Uuid();
+  List<String>sizeList=[];
   //------------------------------------------------------------Add photo------------------------------------------------------------
   Future<void> selectImageFromGallery() async {
     final returnedImages = await ImagePicker().pickMultiImage(
@@ -45,23 +47,85 @@ class _ProductsUploader extends State<ProductsUploader> {
       });
     }
   }
+//------------------------------------------------------------Alert Dialog for Size------------------------------------------------------------
+  Future<void> sizeAlertDialog() async{
+    List<String> tempList=[];
+    await showDialog(context: context, builder: (context) {
+             return   AlertDialog(
+               title: Text(
+                 'Enter Size if any',
+                 style: KStyle.normalTextStyle,
+               ),
+               content: StatefulBuilder(
+                 builder: (context, setState) {
+                   return Column(
+                     mainAxisSize: MainAxisSize.min,
+                     children: [
+                       TextFieldCostume(
+                         hint: 'Enter Size',
+                         preIcon: Icon(Icons.straighten),
+                         valueController: sizeController,
+                         validationFunction: sizeValidation,
+                         errorFlag: sizeFlag,
+                         messageError: sizeMessageError,
+                         isNumber: false,
+                       ),
+                       SizedBox(
+                         height: height,
+                       ),
+                       FilledButton(onPressed: () {
+                         if (sizeController.text.trim().isNotEmpty &&
+                             !tempList.contains(sizeController.text.trim())) {
+                           setState(() {
+                             tempList.add(sizeController.text.trim());
+                             sizeController.clear();
+                           });
+                         }
+                       }, child: Text('ADD',style: KStyle.normalTextStyle,)),
+                       SizedBox(height: height,),
+                       Wrap(
+                         spacing: 8,
+                         runSpacing: 8,
+                         children: tempList.map((size) => Chip(label: Text(size))).toList(),
+                       ),
 
+                     ],
+                   );
+
+                 },
+
+               ),
+               actions: [
+                 ElevatedButton(onPressed: () {
+                   setState(() {
+                     sizeList=tempList;
+
+                   });
+                    sizeController.clear();
+                   Navigator.pop(context);
+                 }, child:Text('Done'))
+               ],
+             );
+    },);
+  }
   //------------------------------------------------------------Sending data------------------------------------------------------------
   Future<bool> sendingData() async {
     setState(() {
       isLoading = true;
     });
     try {
-      final userUID =await FirebaseAuth.instance.currentUser!.uid;
-      final fireStore =await FirebaseFirestore.instance.collection('products').doc();
+      final userUID = await FirebaseAuth.instance.currentUser!.uid;
+      final fireStore =
+          await FirebaseFirestore.instance.collection('products').doc();
       if (!priceFlag &&
           !nameFlag &&
           !quantityFlag &&
           categoryValue != null &&
+
           !descriptionFlag &&
           selectedImages.isNotEmpty) {
-        for(int i =0;i<selectedImages.length;i++){
-          final imageFile=selectedImages[i];
+        for (int i = 0; i < selectedImages.length; i++) {
+          final imageFile = selectedImages[i];
           final imagesRef = await FirebaseStorage.instance
               .ref('images')
               .child('profileImage')
@@ -72,16 +136,14 @@ class _ProductsUploader extends State<ProductsUploader> {
           uploadedImagesUrl.add(imageURL);
         }
         await fireStore.set({
-
-
-          'Category':categoryValue,
-          'Description':descriptionController.text.trim(),
-          'Name':nameController.text.trim(),
-          'Price':priceController.text.trim(),
-          'Quantity':quantityController.text.trim(),
-          'UserID':userUID,
-          'DateOfUpload':DateTime.now(),
-          'Size':['XL' , 'L' ,'M' ,'XS'],
+          'Category': categoryValue,
+          'Description': descriptionController.text.trim(),
+          'Name': nameController.text.trim(),
+          'Price': priceController.text.trim(),
+          'Quantity': quantityController.text.trim(),
+          'UserID': userUID,
+          'DateOfUpload': DateTime.now(),
+          'Size': sizeList,
           'PhotosURL': uploadedImagesUrl,
         });
         return true;
@@ -96,6 +158,26 @@ class _ProductsUploader extends State<ProductsUploader> {
       });
     }
   }
+  //------------------------------------------------------------Size Validations------------------------------------------------------------
+
+  String? sizeMessageError;
+  bool sizeFlag = true;
+  String? sizeValidation(String value) {
+    if (value.isEmpty) {
+      setState(() {
+        sizeFlag = true;
+        sizeMessageError = 'Size is Empty';
+      });
+      return sizeMessageError;
+    }
+
+    setState(() {
+      sizeFlag = false;
+      sizeMessageError = null;
+    });
+    return sizeMessageError;
+  }
+
   //------------------------------------------------------------Name Validations------------------------------------------------------------
 
   String? nameMessageError;
@@ -263,15 +345,15 @@ class _ProductsUploader extends State<ProductsUploader> {
                   isExpanded: true,
                   hint: Text("Select Category", style: KStyle.titleTextStyle),
                   items:
-                  category.map((cat) {
-                    return DropdownMenuItem<String>(
-                      value: cat['label'],
-                      child: Text(
-                        cat['label'],
-                        style: KStyle.normalTextStyle,
-                      ),
-                    );
-                  }).toList(),
+                      category.map((cat) {
+                        return DropdownMenuItem<String>(
+                          value: cat['label'],
+                          child: Text(
+                            cat['label'],
+                            style: KStyle.normalTextStyle,
+                          ),
+                        );
+                      }).toList(),
                   onChanged: (value) {
                     setState(() {
                       categoryValue = value;
@@ -283,7 +365,6 @@ class _ProductsUploader extends State<ProductsUploader> {
 
               //------------------------------------------------------------Description------------------------------------------------------------
               TextFieldCostume(
-
                 maxLetters: 200,
                 hint: 'Description',
                 preIcon: Icon(Icons.description_outlined),
@@ -293,17 +374,35 @@ class _ProductsUploader extends State<ProductsUploader> {
                 messageError: descriptionMessageError,
                 isNumber: false,
               ),
+              //----------------------------------------Sized----------------------------------------
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(onPressed: () {
+                  sizeAlertDialog();
+                }, child: Text('Enter Sizes if any')),
+              ),
+              SizedBox(
+                height: height,
+              ),
               //------------------------------------------------------------Upload------------------------------------------------------------
               Container(
-                  padding: EdgeInsets.all(10),
-                  width: double.infinity,
-                  child: FilledButton(
-
-                      onPressed: () async {
-                        isLoading? null :  await sendingData()? Navigator.pop(context) : null;
-
-                      }, child: isLoading? Center(child: CircularProgressIndicator()) : Text('Upload'))),
-
+                padding: EdgeInsets.all(10),
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () async {
+                    isLoading
+                        ? null
+                        : await sendingData()
+                        ? Navigator.pop(context)
+                        : null;
+                  },
+                  child:
+                      isLoading
+                          ? Center(child: CircularProgressIndicator())
+                          : Text('Upload'),
+                ),
+              ),
             ],
           ),
         ),

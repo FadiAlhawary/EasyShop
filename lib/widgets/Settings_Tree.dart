@@ -1,3 +1,4 @@
+import 'package:animated_toggle_switch/animated_toggle_switch.dart';
 import 'package:easyshop/data/Notifiers.dart';
 import 'package:easyshop/data/constants.dart';
 import 'package:easyshop/pages/Dashboard.dart';
@@ -74,22 +75,64 @@ class _SettingsTreeState extends State<SettingsTree> {
               onTap: () {
              showDialog(context: context, builder: (context) {
                  return ValueListenableBuilder(valueListenable: lightModeSwitchNotifier, builder: (context, isLightMode, child) {
-                  return AlertDialog(
-                     title: Text('Theme Mode',style: KStyle.titleTextStyle,),
-                     content: ListTile(
-                       leading: Text('Turn  ${isLightMode? "on" : "off"} Dark Mode',style: KStyle.normalTextStyle,),
-                       title: Switch(value: !isLightMode, onChanged: (value) async {
-                               lightModeSwitchNotifier.value=!lightModeSwitchNotifier.value;
-                               final SharedPreferences prefs = await SharedPreferences.getInstance();
-                               await prefs.setBool(KConstants.lightModeSwitchConstant, lightModeSwitchNotifier.value);
+                   return AlertDialog(
+                     title: Text('Theme Mode', style: KStyle.titleTextStyle),
+                     content: SingleChildScrollView(
+                       child: Column(
+                         mainAxisSize: MainAxisSize.min,
+                         crossAxisAlignment: CrossAxisAlignment.start,
+                         children: [
+                           Text('Turn ${isLightMode ? "on" : "off"} Dark Mode', style: KStyle.normalTextStyle),
+                           const SizedBox(height: 20),
+                           Center(
+                             child: SizedBox(
+                               width: 200, // give it a nice fixed width
+                               child: AnimatedToggleSwitch<bool>.dual(
+                                 current: lightModeSwitchNotifier.value,
+                                 first: true, // Light mode
+                                 second: false, // Dark mode
+                                 spacing: 50,
+                                 style: ToggleStyle(
+                                   borderColor: Colors.transparent,
+                                   boxShadow: [
+                                     BoxShadow(
+                                       color: Colors.black26,
+                                       spreadRadius: 1,
+                                       blurRadius: 2,
+                                       offset: Offset(0, 2),
+                                     ),
+                                   ],
+                                   indicatorColor: lightModeSwitchNotifier.value ? Colors.yellow : Colors.grey[800],
+                                 ),
+                                 onChanged: (value) async {
+                                   final SharedPreferences prefs = await SharedPreferences.getInstance();
+                                   lightModeSwitchNotifier.value = value;
+                                   await prefs.setBool(KConstants.lightModeSwitchConstant, value);
+                                   setState(() {}); // Update the dialog
+                                 },
+                                 styleBuilder: (isLightMode) => ToggleStyle(
+                                   indicatorColor: isLightMode ? Colors.black:Colors.yellow ,
+                                 ),
+                                 iconBuilder: (isLightMode) => isLightMode
+                                     ? Icon(Icons.nights_stay, color: Colors.blueGrey)
+                                     : Icon(Icons.wb_sunny, color: Colors.orange),
+                                 textBuilder: (isLightMode) => isLightMode
+                                     ? Text('Dark', style: TextStyle(color: Colors.blueGrey))
+                                     : Text('Light', style: TextStyle(color: Colors.orange))
+                               )
 
-                               setState(() {
-                                      isLightMode=value;
-                                    });
-
-                       },),
+                             ),
+                           ),
+                         ],
+                       ),
                      ),
+                     actions: [
+                       ElevatedButton(onPressed: () {
+                         Navigator.pop(context);
+                       }, child: Text('Close',style: KStyle.normalTextStyle,))
+                     ],
                    );
+
                  },);
              },);
               },
