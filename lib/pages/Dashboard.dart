@@ -57,7 +57,9 @@ class _DashboardState extends State<Dashboard> {
                   productName: product['Name'],
                   productPrice: product['Price'],
                   description: product['Description'],
-                  inWishList: false,
+
+                  userUID: FirebaseAuth.instance.currentUser!.uid,
+                  productUID: data[index].id,
                   destination: ProductView(productUID: data[index].id,),
                   isOwner: true,
                 );
