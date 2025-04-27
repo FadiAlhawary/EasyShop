@@ -20,7 +20,9 @@ class _DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: Text('DASHBOARD'),
+      ),
       body: StreamBuilder(
         stream:
             FirebaseFirestore.instance
