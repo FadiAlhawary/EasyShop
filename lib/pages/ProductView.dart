@@ -76,7 +76,7 @@ setState(() {
       final cartRef=await FirebaseFirestore.instance.collection('cart');
       final userUID = await FirebaseAuth.instance.currentUser!.uid;
 
-      if(!inWishList){
+      if(!inCart){
         await cartRef.add({
           'userId':userUID,
           'productId':widget.productUID,
@@ -84,15 +84,15 @@ setState(() {
         });
 
       }
-      else{
-        final productRef =  await cartRef.where('userId' ,isEqualTo: userUID).where('productId',isEqualTo: widget.productUID).get();
-        for (var doc in productRef.docs) {
-          await doc.reference.delete();
-        }
-        setState(() {
-          inCart=false;
-        });
-      }
+      // else{
+      //   final productRef =  await cartRef.where('userId' ,isEqualTo: userUID).where('productId',isEqualTo: widget.productUID).get();
+      //   for (var doc in productRef.docs) {
+      //     await doc.reference.delete();
+      //   }
+      //   setState(() {
+      //     inCart=false;
+      //   });
+      // }
       isInCart();
     }catch(e){
       print(e);
@@ -278,7 +278,7 @@ setState(() {
 
           ElevatedButton.icon(
             onPressed: () {
-              toCart();
+             inCart? null:  toCart();
             },
             icon: const Icon(Icons.shopping_cart),
             label:  Text(inCart? "In Cart" :  "Add to Cart"),
