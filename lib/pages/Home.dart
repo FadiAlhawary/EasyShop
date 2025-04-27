@@ -5,14 +5,12 @@ import 'package:easyshop/pages/Order.dart';
 import 'package:easyshop/pages/Products.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
 import 'Cart.dart';
 import 'ProductView.dart';
 import 'WishList.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
-
 
   @override
   Widget build(BuildContext context) {
@@ -35,13 +33,11 @@ class Home extends StatelessWidget {
               child: Text('Products'),
             ),
 
-
-              // FilledButton(onPressed: () {
-              //   Navigator.push(context, MaterialPageRoute(builder: (context) {
-              //     return Cat();
-              //   },));
-              // }, child: Text('Category')),
-
+            // FilledButton(onPressed: () {
+            //   Navigator.push(context, MaterialPageRoute(builder: (context) {
+            //     return Cat();
+            //   },));
+            // }, child: Text('Category')),
             FilledButton(
               onPressed: () {
                 Navigator.push(
@@ -55,7 +51,6 @@ class Home extends StatelessWidget {
               },
               child: Text('Cart'),
             ),
-
 
             FilledButton(
               onPressed: () {
@@ -84,7 +79,6 @@ class Home extends StatelessWidget {
               },
               child: Text('Order'),
             ),
-
 
             FilledButton(
               onPressed: () {
@@ -117,6 +111,7 @@ class Home extends StatelessWidget {
               },
               child: Text('Dashboard'),
             ),
+
             //
             // FilledButton(
             //   onPressed: () {
@@ -131,7 +126,6 @@ class Home extends StatelessWidget {
             //   },
             //   child: Text('Product View'),
             // ),
-
             FilledButton(
               onPressed: () {
                 FirebaseAuth.instance.signOut();
