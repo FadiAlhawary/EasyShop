@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+
+import 'Notifiers.dart';
  class KConstants{
    static const String userNameConstant='userNameConstant';
    static const String imageURLConstant='imageURLConstant';
    static const String lightModeSwitchConstant='lightModeSwitchConstant';
  }
 class KStyle{
-  static const TextStyle headerTextStyle=TextStyle(
+  static TextStyle headerTextStyle=TextStyle(
     fontSize: 40,
     fontWeight: FontWeight.bold,
     letterSpacing: 10,
@@ -14,7 +16,6 @@ class KStyle{
             offset: Offset(2, 2),
          blurRadius: 4
        ),] */
-    color: Colors.black,
   );
   static const normalTextStyle=TextStyle(
     fontSize: 15,

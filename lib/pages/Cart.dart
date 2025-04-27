@@ -11,13 +11,28 @@ class Cart extends StatefulWidget {
 }
 
 class _CartState extends State<Cart> {
-  
-  void _updateQuantity(String docId, int newQuantity) {
+
+  // void _updateQuantity(String docId, int newQuantity) {
+  //   if (newQuantity > 0) {
+  //     FirebaseFirestore.instance
+  //         .collection('cart')
+  //         .doc(docId)
+  //         .update({'Quantity': newQuantity});
+  //   } else {
+  //     // If quantity <= 0, remove the item
+  //     FirebaseFirestore.instance
+  //         .collection('cart')
+  //         .doc(docId)
+  //         .delete();
+  //   }
+  // }
+
+  void updateQuantity(String docId, int newQuantity) {
     if (newQuantity > 0) {
       FirebaseFirestore.instance
           .collection('cart')
           .doc(docId)
-          .update({'quantity': newQuantity});
+          .update({'Quantity': newQuantity});
     } else {
       // If quantity <= 0, remove the item
       FirebaseFirestore.instance
@@ -27,7 +42,6 @@ class _CartState extends State<Cart> {
     }
   }
 
-  
   void _clearCart() async {
     var cartItems = await FirebaseFirestore.instance
         .collection('cart')
@@ -41,6 +55,11 @@ class _CartState extends State<Cart> {
 
   @override
   Widget build(BuildContext context) {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+    final cartStream = FirebaseFirestore.instance
+        .collection('cart')
+        .where('userId', isEqualTo: userId)
+        .snapshots();
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -54,7 +73,7 @@ class _CartState extends State<Cart> {
           IconButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: () {
-              
+
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
@@ -80,10 +99,7 @@ class _CartState extends State<Cart> {
         ],
       ),
       body: StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection('cart')
-            .where('UserID', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
-            .snapshots(),
+        stream: cartStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -93,11 +109,11 @@ class _CartState extends State<Cart> {
           }
 
           final cartItems = snapshot.data!.docs;
-
-          double totalPrice = 0;
-          for (var item in cartItems) {
-            totalPrice += (item['price'] ?? 0) * (item['quantity'] ?? 1);
-          }
+          //
+          // double totalPrice = 0;
+          // for (var item in cartItems) {
+          //   totalPrice += (item['price'] ?? 0) * (item['quantity'] ?? 1);
+          // }
 
           return Column(
             children: [
@@ -105,22 +121,40 @@ class _CartState extends State<Cart> {
                 child: ListView.builder(
                   itemCount: cartItems.length,
                   itemBuilder: (context, index) {
-                    final item = cartItems[index];
-                    return _buildCartItem(
-                      docId: item.id,
-                      brand: item['brand'] ?? '',
-                      productName: item['productName'] ?? '',
-                      details: item['details'],
-                      price: item['price']?.toDouble() ?? 0.0,
-                      quantity: item['quantity'] ?? 1,
-                      onQuantityChanged: (newQuantity) {
-                        _updateQuantity(item.id, newQuantity);
-                      },
-                    );
+                    final cartItem = cartItems[index];
+                    final productId = cartItem['productId'];
+                    return FutureBuilder(future: FirebaseFirestore.instance
+                        .collection('products')
+                        .doc(productId)
+                        .get(),
+                      builder: (context, productSnapshot) {
+                        if (productSnapshot.connectionState == ConnectionState.waiting) {
+                          return const SizedBox(); // Placeholder while loading
+                        }
+
+                        if (!productSnapshot.hasData || !productSnapshot.data!.exists) {
+                          return const SizedBox(); // Product deleted or not found
+                        }
+
+                        final productData = productSnapshot.data!;
+
+                                 return _buildCartItem(
+                                   docId: productData.id,
+                                   photoURL: productData['PhotosURL'][0] ,
+                                   productName: productData['Name'] ?? '',
+
+                                   price: productData['Price'],
+                                   quantity: cartItem['Quantity'],
+                                   onQuantityChanged: (newQuantity) {
+                                     updateQuantity(cartItem.id, newQuantity);
+                                   },
+                                 );
+                      }
+                      );
                   },
                 ),
               ),
-              _buildBottomBar(totalPrice),
+              // _buildBottomBar(totalPrice),
             ],
           );
         },
@@ -130,10 +164,10 @@ class _CartState extends State<Cart> {
 
   Widget _buildCartItem({
     required String docId,
-    required String brand,
+    required String photoURL,
     required String productName,
     String? details,
-    required double price,
+    required int price,
     required int quantity,
     required ValueChanged<int> onQuantityChanged,
   }) {
@@ -145,26 +179,20 @@ class _CartState extends State<Cart> {
           Container(
             width: 80,
             height: 80,
-            color: Colors.grey[200],
+            child: Image.network(photoURL),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(brand, style: KStyle.titleTextStyle),
-                    const Text('view brand', style: TextStyle(color: Colors.grey)),
-                  ],
-                ),
+
                 Text(productName, style: KStyle.normalTextStyle),
                 if (details != null)
                   Text(details, style: const TextStyle(color: Colors.grey)),
                 const SizedBox(height: 8),
                 Text(
-                  '\$${price.toStringAsFixed(2)}',
+                  '\$${price}',
                   style: KStyle.titleTextStyle,
                 ),
               ],

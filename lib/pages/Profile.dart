@@ -215,18 +215,25 @@ class _ProfileState extends State<Profile> {
                         changeProfileImage();
                       },
                       child: SizedBox(
-                        width: double.infinity,
-                        child: CircleAvatar(
-                          backgroundImage:
+                        width: 230,
+                        height: 230,
+                        child: ClipOval(
+                          child:
                               selectedImage != null
-                                  ? FileImage(selectedImage!)
+                                  ? Image.file(selectedImage!,fit: BoxFit.cover)
                                   : snapshot.data!['profileImageUrl'] != ''
-                                  ? NetworkImage(
+                                  ? Image.network(
                                     snapshot.data!['profileImageUrl'],
-                                  )
-                                  : AssetImage('assets/images/npPerson.jpg')
-                                      as ImageProvider,
-                          radius: 120, // Optional: Adjust size
+                                  fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Image.asset(
+                                    'assets/images/no-connection.jpg', // Your offline fallback image
+                                    fit: BoxFit.cover,
+                                  );
+                                },)
+                                  : Image.asset('assets/images/npPerson.jpg'),
+
+                           // Optional: Adjust size
                         ),
                       ),
                     ),
