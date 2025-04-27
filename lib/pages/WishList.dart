@@ -12,6 +12,84 @@ class Wishlist extends StatefulWidget {
 }
 
 class _WishlistState extends State<Wishlist> {
+     Future<void> toCart()async{
+       try{
+         final userId  =await  FirebaseAuth.instance.currentUser!.uid;
+         final cartRef=await FirebaseFirestore.instance.collection('cart');
+         final wishListRef=await FirebaseFirestore.instance.collection('wishList').where('userId' ,isEqualTo: userId).get();
+         for (var doc in wishListRef.docs) {
+           final productId = doc['productId'];
+           await cartRef.add({
+             'userId': userId,
+             'productId': productId,
+             'Quantity':1,
+           })
+               .then((value) => print("Added to cart"))
+               .catchError((error) => print("Failed to add to cart: $error"));
+           await doc.reference.delete();
+         }
+       }catch(e){
+         print(e);
+       }
+     }
+  double totalPrice=0;
+  Future<List<Widget>> _buildWishlistItems(List<QueryDocumentSnapshot> wishListDocs) async {
+    List<Widget> widgets = [];
+    totalPrice = 0.0; // Reset total price before calculation
+
+    for (var wishListItem in wishListDocs) {
+      final productId = wishListItem['productId'];
+      final productSnapshot = await FirebaseFirestore.instance
+          .collection('products')
+          .doc(productId)
+          .get();
+
+      if (productSnapshot.exists) {
+        final productData = productSnapshot.data()!;
+        final price = productData['Price'] ?? 0;
+
+        totalPrice += price; // Add price to total
+
+        widgets.add(
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductView(productUID: productId),
+              ),
+            ),
+            child: _buildWishlistItem(
+              context: context,
+              wishlistDocId: wishListItem.id,
+              photoURL: productData['PhotosURL'][0],
+              productName: productData['Name'],
+              price: price,
+            ),
+          ),
+        );
+      }
+    }
+
+    return widgets;
+  }
+
+  Future<double> _calculateTotalPrice(List<QueryDocumentSnapshot> cartItems) async {
+    double total = 0.0;
+
+    for (var cartItem in cartItems) {
+      final productId = cartItem['productId'];
+      final quantity = cartItem['Quantity'] ?? 1;
+
+      final productSnapshot = await FirebaseFirestore.instance.collection('products').doc(productId).get();
+      if (productSnapshot.exists) {
+        final price = productSnapshot.data()!['Price'] ?? 0;
+        total += (price * quantity);
+      }
+    }
+
+    return total;
+  }
+
   @override
   Widget build(BuildContext context) {
     final userId = FirebaseAuth.instance.currentUser!.uid;
@@ -48,7 +126,7 @@ class _WishlistState extends State<Wishlist> {
           }
 
           return FutureBuilder<List<Widget>>(
-            future: _buildWishlistItem(wishlistDoc),
+            future: _buildWishlistItems(wishListDocs),
             builder: (context, itemSnapshot) {
               if (itemSnapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -166,5 +244,3 @@ class _WishlistState extends State<Wishlist> {
     );
   }
 }
-
-

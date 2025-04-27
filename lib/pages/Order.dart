@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easyshop/data/constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 class Order extends StatefulWidget {
   const Order({super.key});
@@ -10,10 +12,15 @@ class Order extends StatefulWidget {
 
 class _OrderState extends State<Order> {
   String paymentMethod = 'cash';
-  TextEditingController couponController = TextEditingController();
 
-  final Color primaryBlue = const Color(0xFF2979FF); // a nice soft blue
-  final Color background = const Color(0xFFF0F4FF);  // light bluish background
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController companyNameController = TextEditingController();
+  final TextEditingController streetAddressController = TextEditingController();
+  final TextEditingController apartmentController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
+
+  final Color primaryBlue = const Color(0xFF2979FF);
+  final Color background = const Color(0xFFF0F4FF);
 
   @override
   Widget build(BuildContext context) {
@@ -32,11 +39,11 @@ class _OrderState extends State<Order> {
             Text('Billing Details', style: KStyle.headerTextStyle.copyWith(color: primaryBlue)),
             const SizedBox(height: 20),
 
-            _inputField('First Name*'),
-            _inputField('Company Name'),
-            _inputField('Street Address*'),
-            _inputField('Apartment (optional)'),
-            _inputField('Town/City*'),
+            _inputField('First Name*', firstNameController),
+            _inputField('Company Name', companyNameController),
+            _inputField('Street Address*', streetAddressController),
+            _inputField('Apartment (optional)', apartmentController),
+            _inputField('Town/City*', cityController),
 
             const SizedBox(height: 30),
             _itemRow('LCD Monitor', 650),
@@ -64,52 +71,29 @@ class _OrderState extends State<Order> {
             ),
 
             const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: couponController,
-                    decoration: InputDecoration(
-                      hintText: 'Coupon Code',
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryBlue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Coupon "${couponController.text}" applied!'),
-                      ),
-                    );
-                  },
-                  child: const Text('Apply'),
-                )
-              ],
-            )
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryBlue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () {
+                _placeOrder(['product1', 'product2']);
+              },
+              child: const Text('Place Order'),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _inputField(String label) {
+  Widget _inputField(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextField(
+        controller: controller,
         decoration: InputDecoration(
           labelText: label,
           filled: true,
@@ -153,6 +137,26 @@ class _OrderState extends State<Order> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _placeOrder(List<String> productId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return; // User not logged in
+
+    await FirebaseFirestore.instance.collection('orders').add({
+      'userId': user.uid,
+      'ProductId': productId,
+      'paymentMethod': paymentMethod,
+      'Date': Timestamp.now(),
+      'Name': firstNameController.text.trim(),
+      'streetAddress': streetAddressController.text.trim(),
+      'Apartment': apartmentController.text.trim(),
+      'city': cityController.text.trim(),
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('order placed successfully')),
     );
   }
 }

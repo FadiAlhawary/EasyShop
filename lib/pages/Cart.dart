@@ -29,21 +29,6 @@ class _CartState extends State<Cart> {
      return total;
    }
 
-  // void _updateQuantity(String docId, int newQuantity) {
-  //   if (newQuantity > 0) {
-  //     FirebaseFirestore.instance
-  //         .collection('cart')
-  //         .doc(docId)
-  //         .update({'Quantity': newQuantity});
-  //   } else {
-  //     // If quantity <= 0, remove the item
-  //     FirebaseFirestore.instance
-  //         .collection('cart')
-  //         .doc(docId)
-  //         .delete();
-  //   }
-  // }
-
   void updateQuantity(String docId, int newQuantity) {
     if (newQuantity > 0) {
       FirebaseFirestore.instance
@@ -51,7 +36,6 @@ class _CartState extends State<Cart> {
           .doc(docId)
           .update({'Quantity': newQuantity});
     } else {
-      // If quantity <= 0, remove the item
       FirebaseFirestore.instance
           .collection('cart')
           .doc(docId)
@@ -90,7 +74,6 @@ class _CartState extends State<Cart> {
           IconButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: () {
-
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
@@ -177,7 +160,6 @@ class _CartState extends State<Cart> {
           );
         },
       ),
-
     );
   }
 
@@ -205,7 +187,6 @@ class _CartState extends State<Cart> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 Text(productName, style: KStyle.normalTextStyle),
                 if (details != null)
                   Text(details, style: const TextStyle(color: Colors.grey)),
