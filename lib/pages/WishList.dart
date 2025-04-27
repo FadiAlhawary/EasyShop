@@ -94,7 +94,7 @@ class _WishlistState extends State<Wishlist> {
     required String wishlistDocId,
     required String photoURL,
     required String productName,
-    required String price,
+    required int price,
   }) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
