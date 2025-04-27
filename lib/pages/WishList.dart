@@ -48,7 +48,7 @@ class _WishlistState extends State<Wishlist> {
           }
 
           return FutureBuilder<List<Widget>>(
-            future: _buildWishlistItems(wishListDocs),
+            future: _buildWishlistItem(wishlistDoc),
             builder: (context, itemSnapshot) {
               if (itemSnapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
