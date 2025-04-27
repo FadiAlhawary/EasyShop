@@ -3,14 +3,14 @@ import 'package:easyshop/data/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class Order extends StatefulWidget {
-  const Order({super.key});
+class OrderPage extends StatefulWidget {
+  const OrderPage({super.key});
 
   @override
-  State<Order> createState() => _OrderState();
+  State<OrderPage> createState() => _OrderState();
 }
 
-class _OrderState extends State<Order> {
+class _OrderState extends State<OrderPage> {
   String paymentMethod = 'cash';
 
   final TextEditingController firstNameController = TextEditingController();
