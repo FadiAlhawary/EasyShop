@@ -45,13 +45,8 @@ class _OrderState extends State<OrderPage> {
             _inputField('Apartment (optional)', apartmentController),
             _inputField('Town/City*', cityController),
 
-            const SizedBox(height: 30),
-            _itemRow('LCD Monitor', 650),
-            _itemRow('H1 Gamepad', 1100),
+            const SizedBox(height: 20),
             const Divider(thickness: 1.2),
-            _priceRow('Subtotal', 1750),
-            _priceRow('Shipping', 0, isFree: true),
-            _priceRow('Total', 1750),
 
             const SizedBox(height: 20),
             Text('Payment Method', style: KStyle.titleTextStyle.copyWith(color: primaryBlue)),
@@ -108,19 +103,6 @@ class _OrderState extends State<OrderPage> {
     );
   }
 
-  Widget _itemRow(String name, int price) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(name, style: KStyle.normalTextStyle),
-          Text('\$$price', style: KStyle.normalTextStyle),
-        ],
-      ),
-    );
-  }
-
   Widget _priceRow(String label, int amount, {bool isFree = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -144,7 +126,7 @@ class _OrderState extends State<OrderPage> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return; // User not logged in
 
-    await FirebaseFirestore.instance.collection('orders').add({
+    await FirebaseFirestore.instance.collection('Order').add({
       'userId': user.uid,
       'ProductId': productId,
       'paymentMethod': paymentMethod,
@@ -156,7 +138,7 @@ class _OrderState extends State<OrderPage> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('order placed successfully')),
+      const SnackBar(content: Text('Order placed successfully')),
     );
   }
 }

@@ -72,7 +72,7 @@ class Home extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) {
-                      return Order();
+                      return OrderPage();
                     },
                   ),
                 );
