@@ -3,6 +3,8 @@ import 'package:easyshop/data/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'Order.dart';
+
 class Cart extends StatefulWidget {
   const Cart({super.key});
 
@@ -267,7 +269,7 @@ class _CartState extends State<Cart> {
                   content: Text('Order placed successfully!'),
                 ),
               );
-              _clearCart();
+              Navigator.push(context, MaterialPageRoute(builder: (context) => OrderPage(),));
             },
             style: FilledButton.styleFrom(
               backgroundColor: Colors.black,
