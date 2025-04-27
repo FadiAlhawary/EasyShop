@@ -1,5 +1,6 @@
 import 'package:easyshop/data/Constants.dart';
 import 'package:easyshop/data/Notifiers.dart';
+import 'package:easyshop/data/WishList.dart';
 import 'package:easyshop/pages/Cart.dart';
 import 'package:easyshop/pages/Products.dart';
 import 'package:easyshop/pages/WishList.dart';

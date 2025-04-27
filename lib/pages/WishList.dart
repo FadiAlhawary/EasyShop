@@ -13,12 +13,12 @@ class _WishlistState extends State<Wishlist> {
   final CollectionReference wishlistRef =
       FirebaseFirestore.instance.collection('wishlist');
 
-  // Function to remove a single item by its document ID
+ 
   Future<void> _removeFromWishlist(String docId) async {
     await wishlistRef.doc(docId).delete();
   }
 
-  // Function to clear the entire wishlist
+ 
   Future<void> _clearWishlist() async {
     final snapshot = await wishlistRef.get();
     for (var doc in snapshot.docs) {
@@ -26,13 +26,26 @@ class _WishlistState extends State<Wishlist> {
     }
   }
 
-  Future<void> _moveAllToCart() async {
-    final snapshot = await wishlistRef.get();
-    for (var doc in snapshot.docs) {
+ Future<void> _moveAllToCart() async {
+  final snapshot = await wishlistRef.get();
+
+  for (var doc in snapshot.docs) {
     
-      await doc.reference.delete(); 
-    }
+    await FirebaseFirestore.instance
+        .collection('cart')
+        .add(doc.data() as Map<String, dynamic>);
+
+    // Delete item from wishlist
+    await doc.reference.delete();
   }
+
+
+  if (mounted) {
+    Navigator.pushReplacementNamed(context, '/cart');
+  }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
