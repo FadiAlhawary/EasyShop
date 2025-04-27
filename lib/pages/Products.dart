@@ -17,7 +17,7 @@ class _ProductsState extends State<Products> {
 
   final List<Map<String, dynamic>> categories = [
     {'label': 'All', 'image': 'assets/images/all.png'},
-    {'label': 'Shoes', 'image': 'assets/images/shoes.png'},
+    {'label': 'Shoes', 'image': 'assets/images/shoes1.png'},
     {'label': 'Clothes', 'image': 'assets/images/clothes.png'},
     {'label': 'Accessories', 'image': 'assets/images/accessories.png'},
     {'label': 'Electronics', 'image': 'assets/images/phone.png'},
@@ -45,19 +45,40 @@ class _ProductsState extends State<Products> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
-      body:StreamBuilder(stream: FirebaseFirestore.instance.collection('products').snapshots() , builder: (context, snapshot) {
-          if(snapshot.connectionState==ConnectionState.waiting){
-            return Center(child: CircularProgressIndicator(),);
+      body: StreamBuilder(
+        stream: FirebaseFirestore.instance.collection('products').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
           }
+
           if (snapshot.data == null || snapshot.data!.docs.isEmpty) {
             return Center(child: Lottie.asset('assets/lotties/empty.json'));
           }
-          if(snapshot.hasData){
-            final data = snapshot.data!.docs;
-            return  Column(
 
+          if (snapshot.hasData) {
+            final data = snapshot.data!.docs;
+
+            final filteredData =
+                data.where((doc) {
+                  var product = doc.data();
+
+                  bool matchesSearch = product['Name']
+                      .toString()
+                      .toLowerCase()
+                      .contains(_searchController.text.toLowerCase());
+
+                  bool matchesCategory =
+                      selectedCategory == 'All' ||
+                      product['Category'].toString().toLowerCase() ==
+                          selectedCategory.toLowerCase();
+
+                  return matchesSearch && matchesCategory;
+                }).toList();
+
+            return Column(
               children: [
+                // Search bar
                 Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: TextField(
@@ -78,78 +99,114 @@ class _ProductsState extends State<Products> {
                     ),
                   ),
                 ),
+
+                // Categories filter bar
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children:
-                      categories.map((category) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 12.0),
-                          child: InkWell(
-                            onTap: () {
-                              setState(() {
-                                selectedCategory = category['label'];
-                              });
-                            },
-                            child: Column(
-                              children: [
-                                CircleAvatar(
-                                  radius: 30,
-                                  backgroundImage: AssetImage(category['image']),
+                          categories.map((category) {
+                            bool isSelected =
+                                category['label'] == selectedCategory;
+
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 12.0),
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    selectedCategory = category['label'];
+                                  });
+                                },
+                                child: Column(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: isSelected ? 34 : 30,
+                                      backgroundColor:
+                                          isSelected
+                                              ? Colors.grey.shade300
+                                              : Colors.transparent,
+                                      child: CircleAvatar(
+                                        radius: 30,
+                                        backgroundImage: AssetImage(
+                                          category['image'],
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      category['label'],
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color:
+                                            isSelected
+                                                ? Colors.black
+                                                : Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                SizedBox(height: 8),
-                                Text(
-                                  category['label'],
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                              ),
+                            );
+                          }).toList(),
                     ),
                   ),
                 ),
-                Expanded(child:  GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 9,
-                    childAspectRatio: 0.6, // Slightly taller
-                  ),
-                  itemCount: data.length,
-                  itemBuilder: (context, index) {
-                    // var product = filteredProducts[index];
-                    var product = data[index].data();
-                    return ProductCardWidget(
-                      tag: product['Name'],
-                      imageURL: product['PhotosURL'][0],
-                      productName: product['Name'],
-                      productPrice: product['Price'],
-                      description: product['Description'],
 
-                      destination: ProductView(productUID: data[index].id,),
-                      productUID: data[index].id,
-                      userUID: FirebaseAuth.instance.currentUser!.uid,
-                      isOwner: false,
-                    );
-                    // return Center(child: Text(product['Name']),);
-                  },
-                ),
+                // Product grid
+                Expanded(
+                  child:
+                      filteredData.isEmpty
+                          ? Center(
+                            child: Lottie.asset('assets/lotties/empty.json'),
+                          )
+                          : GridView.builder(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 12,
+                                  childAspectRatio: 0.6,
+                                ),
+                            itemCount: filteredData.length,
+                            itemBuilder: (context, index) {
+                              var product = filteredData[index].data();
+
+                              return ProductCardWidget(
+                                tag: product['Name'],
+                                imageURL: product['PhotosURL'][0],
+                                productName: product['Name'],
+                                productPrice: product['Price'],
+                                description: product['Description'],
+                                destination: ProductView(
+                                  productUID: filteredData[index].id,
+                                ),
+                                productUID: filteredData[index].id,
+                                userUID: FirebaseAuth.instance.currentUser!.uid,
+                                isOwner: false,
+                              );
+                            },
+                          ),
                 ),
               ],
             );
           }
-          if(snapshot.hasError){
-            return Center(child: Text('An error Has Occurred Please try again later'),);
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('An error has occurred. Please try again later.'),
+            );
           }
-          return Center(child: Text('UNCAUGHT ERROR'),);
-      },)
+
+          return Center(child: Text('UNCAUGHT ERROR'));
+        },
+      ),
     );
   }
 }

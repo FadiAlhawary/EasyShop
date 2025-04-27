@@ -12,30 +12,6 @@ class Wishlist extends StatefulWidget {
 }
 
 class _WishlistState extends State<Wishlist> {
-  final CollectionReference wishlistRef =
-      FirebaseFirestore.instance.collection('wishlist');
-
-  // Function to remove a single item by its document ID
-  Future<void> _removeFromWishlist(String docId) async {
-    await wishlistRef.doc(docId).delete();
-  }
-
-  // Function to clear the entire wishlist
-  Future<void> _clearWishlist() async {
-    final snapshot = await wishlistRef.get();
-    for (var doc in snapshot.docs) {
-      await doc.reference.delete();
-    }
-  }
-
-  Future<void> _moveAllToCart() async {
-    final snapshot = await wishlistRef.get();
-    for (var doc in snapshot.docs) {
-    
-      await doc.reference.delete(); 
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final userId = FirebaseAuth.instance.currentUser!.uid;
@@ -71,45 +47,32 @@ class _WishlistState extends State<Wishlist> {
             return const Center(child: Text('Your wishlist is empty.'));
           }
 
-          return ListView.builder(
-            itemCount: wishListDocs.length,
-            itemBuilder: (context, index) {
-              final wishListItem = wishListDocs[index];
-              final productId = wishListItem['productId'];
+          return FutureBuilder<List<Widget>>(
+            future: _buildWishlistItems(wishListDocs),
+            builder: (context, itemSnapshot) {
+              if (itemSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-              return FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance
-                    .collection('products')
-                    .doc(productId)
-                    .get(),
-                builder: (context, productSnapshot) {
-                  if (productSnapshot.connectionState == ConnectionState.waiting) {
-                    return const SizedBox(); // Placeholder while loading
-                  }
+              if (!itemSnapshot.hasData) {
+                return const Center(child: Text('Something went wrong.'));
+              }
 
-                  if (!productSnapshot.hasData || !productSnapshot.data!.exists) {
-                    return const SizedBox(); // Product deleted or not found
-                  }
-
-                  final productData = productSnapshot.data!;
-
-
-                  return GestureDetector(
-                    onTap: () => Navigator.push(context,MaterialPageRoute(builder: (context) => ProductView(productUID: productData.id),)),
-                    child: _buildWishlistItem(
-                      context: context,
-                      wishlistDocId: wishListItem.id, // important for delete
-                      photoURL: productData['PhotosURL'][0],
-                      productName: productData['Name'] ,
-                      price: productData['Price'],
+              return Column(
+                children: [
+                  Expanded(
+                    child: ListView(
+                      children: itemSnapshot.data!,
                     ),
-                  );
-                },
+                  ),
+                  _buildBottomBar(totalPrice),
+                ],
               );
             },
           );
         },
       ),
+
     );
   }
 
@@ -157,4 +120,51 @@ class _WishlistState extends State<Wishlist> {
       ),
     );
   }
+
+  Widget _buildBottomBar(double totalPrice) {
+    return Container(
+      color: Colors.grey[100],
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Total Price', style: KStyle.titleTextStyle),
+              const SizedBox(height: 4),
+              Text(
+                '\$${totalPrice.toStringAsFixed(2)}',
+                style: KStyle.headerTextStyle.copyWith(fontSize: 18),
+              ),
+            ],
+          ),
+          const Spacer(),
+          FilledButton(
+            onPressed: () {
+
+
+         toCart();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Switched to cart  successfully!'),
+                ),
+              );
+
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text(
+              'Add to Cart',
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
+

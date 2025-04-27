@@ -11,6 +11,23 @@ class Cart extends StatefulWidget {
 }
 
 class _CartState extends State<Cart> {
+   double totalPrice=0;
+   Future<double> _calculateTotalPrice(List<QueryDocumentSnapshot> cartItems) async {
+     double total = 0.0;
+
+     for (var cartItem in cartItems) {
+       final productId = cartItem['productId'];
+       final quantity = cartItem['Quantity'] ?? 1;
+
+       final productSnapshot = await FirebaseFirestore.instance.collection('products').doc(productId).get();
+       if (productSnapshot.exists) {
+         final price = productSnapshot.data()!['Price'] ?? 0;
+         total += (price * quantity);
+       }
+     }
+
+     return total;
+   }
 
   // void _updateQuantity(String docId, int newQuantity) {
   //   if (newQuantity > 0) {
@@ -109,56 +126,58 @@ class _CartState extends State<Cart> {
           }
 
           final cartItems = snapshot.data!.docs;
-          //
-          // double totalPrice = 0;
-          // for (var item in cartItems) {
-          //   totalPrice += (item['price'] ?? 0) * (item['quantity'] ?? 1);
-          // }
 
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  itemCount: cartItems.length,
-                  itemBuilder: (context, index) {
-                    final cartItem = cartItems[index];
-                    final productId = cartItem['productId'];
-                    return FutureBuilder(future: FirebaseFirestore.instance
-                        .collection('products')
-                        .doc(productId)
-                        .get(),
-                      builder: (context, productSnapshot) {
-                        if (productSnapshot.connectionState == ConnectionState.waiting) {
-                          return const SizedBox(); // Placeholder while loading
-                        }
+          return FutureBuilder(
+            future: _calculateTotalPrice(cartItems),
+            builder: (context, totalSnapshot) {
+              if (totalSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-                        if (!productSnapshot.hasData || !productSnapshot.data!.exists) {
-                          return const SizedBox(); // Product deleted or not found
-                        }
+              double totalPrice = totalSnapshot.data ?? 0.0;
 
-                        final productData = productSnapshot.data!;
+              return Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: cartItems.length,
+                      itemBuilder: (context, index) {
+                        final cartItem = cartItems[index];
+                        final productId = cartItem['productId'];
+                        return FutureBuilder(
+                          future: FirebaseFirestore.instance.collection('products').doc(productId).get(),
+                          builder: (context, productSnapshot) {
+                            if (productSnapshot.connectionState == ConnectionState.waiting) {
+                              return const SizedBox();
+                            }
+                            if (!productSnapshot.hasData || !productSnapshot.data!.exists) {
+                              return const SizedBox();
+                            }
 
-                                 return _buildCartItem(
-                                   docId: productData.id,
-                                   photoURL: productData['PhotosURL'][0] ,
-                                   productName: productData['Name'] ?? '',
-
-                                   price: productData['Price'],
-                                   quantity: cartItem['Quantity'],
-                                   onQuantityChanged: (newQuantity) {
-                                     updateQuantity(cartItem.id, newQuantity);
-                                   },
-                                 );
-                      }
-                      );
-                  },
-                ),
-              ),
-              // _buildBottomBar(totalPrice),
-            ],
+                            final productData = productSnapshot.data!;
+                            return _buildCartItem(
+                              docId: productData.id,
+                              photoURL: productData['PhotosURL'][0],
+                              productName: productData['Name'] ?? '',
+                              price: productData['Price'],
+                              quantity: cartItem['Quantity'],
+                              onQuantityChanged: (newQuantity) {
+                                updateQuantity(cartItem.id, newQuantity);
+                              },
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  _buildBottomBar(totalPrice),
+                ],
+              );
+            },
           );
         },
       ),
+
     );
   }
 
