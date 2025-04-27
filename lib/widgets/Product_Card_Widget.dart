@@ -22,7 +22,7 @@ class ProductCardWidget extends StatefulWidget {
   final String tag;
   final String imageURL;
   final String productName;
-  final String productPrice;
+  final int productPrice;
   final String description;
   final Widget destination;
   final bool isOwner;
@@ -158,11 +158,7 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
                     children: [
                       Text(
                         widget.productName,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Colors.black87,
-                        ),
+                        style: KStyle.normalTextStyle
                       ),
                       SizedBox(height: 10),
                       Text(

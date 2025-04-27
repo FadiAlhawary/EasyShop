@@ -128,7 +128,7 @@ class _ProductsUploader extends State<ProductsUploader> {
           final imageFile = selectedImages[i];
           final imagesRef = await FirebaseStorage.instance
               .ref('images')
-              .child('profileImage')
+              .child('productImage')
               .child(uuid.v4());
           final uploadTask = imagesRef.putFile(imageFile);
           final taskSnapshot = await uploadTask;
@@ -139,8 +139,8 @@ class _ProductsUploader extends State<ProductsUploader> {
           'Category': categoryValue,
           'Description': descriptionController.text.trim(),
           'Name': nameController.text.trim(),
-          'Price': priceController.text.trim(),
-          'Quantity': quantityController.text.trim(),
+          'Price': double.tryParse(priceController.text.trim()) ?? 0.0, // Convert price to double
+          'Quantity': int.tryParse(quantityController.text.trim()) ?? 0,
           'UserID': userUID,
           'DateOfUpload': DateTime.now(),
           'Size': sizeList,

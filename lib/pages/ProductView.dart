@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easyshop/data/Constants.dart';
-import 'package:easyshop/pages/Products.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -81,6 +80,7 @@ setState(() {
         await cartRef.add({
           'userId':userUID,
           'productId':widget.productUID,
+          'Quantity':1,
         });
 
       }

@@ -1,24 +1,26 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:easyshop/data/constants.dart';
+import 'package:easyshop/pages/ProductView.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:easyshop/data/constants.dart';
 
 class Wishlist extends StatefulWidget {
   const Wishlist({super.key});
 
   @override
-  _WishlistState createState() => _WishlistState();
+  State<Wishlist> createState() => _WishlistState();
 }
 
 class _WishlistState extends State<Wishlist> {
   final CollectionReference wishlistRef =
       FirebaseFirestore.instance.collection('wishlist');
 
- 
+  // Function to remove a single item by its document ID
   Future<void> _removeFromWishlist(String docId) async {
     await wishlistRef.doc(docId).delete();
   }
 
- 
+  // Function to clear the entire wishlist
   Future<void> _clearWishlist() async {
     final snapshot = await wishlistRef.get();
     for (var doc in snapshot.docs) {
@@ -26,29 +28,22 @@ class _WishlistState extends State<Wishlist> {
     }
   }
 
- Future<void> _moveAllToCart() async {
-  final snapshot = await wishlistRef.get();
-
-  for (var doc in snapshot.docs) {
+  Future<void> _moveAllToCart() async {
+    final snapshot = await wishlistRef.get();
+    for (var doc in snapshot.docs) {
     
-    await FirebaseFirestore.instance
-        .collection('cart')
-        .add(doc.data() as Map<String, dynamic>);
-
-    // Delete item from wishlist
-    await doc.reference.delete();
+      await doc.reference.delete(); 
+    }
   }
-
-
-  if (mounted) {
-    Navigator.pushReplacementNamed(context, '/cart');
-  }
-}
-
-
 
   @override
   Widget build(BuildContext context) {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+    final wishListStream = FirebaseFirestore.instance
+        .collection('wishList')
+        .where('userId', isEqualTo: userId)
+        .snapshots();
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -58,76 +53,60 @@ class _WishlistState extends State<Wishlist> {
           },
         ),
         title: const Text('Wishlist'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            onPressed: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text('Clear Wishlist', style: KStyle.titleTextStyle),
-                  content: Text('Are you sure you want to clear your wishlist?', style: KStyle.normalTextStyle),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Clear'),
-                    ),
-                  ],
-                ),
-              );
-              if (confirm == true) {
-                await _clearWishlist();
-              }
-            },
-          ),
-        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: wishlistRef.snapshots(),
+        stream: wishListStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator()); // Loading
+            return const Center(child: CircularProgressIndicator());
           }
+
           if (snapshot.hasError) {
             return const Center(child: Text('Something went wrong.'));
           }
 
-          final wishlistItems = snapshot.data?.docs ?? [];
+          final wishListDocs = snapshot.data?.docs ?? [];
 
-          if (wishlistItems.isEmpty) {
-            return const Center(
-              child: Text('Your wishlist is empty.'),
-            );
+          if (wishListDocs.isEmpty) {
+            return const Center(child: Text('Your wishlist is empty.'));
           }
 
-          double totalPrice = 0;
-          for (var item in wishlistItems) {
-            totalPrice += (item['price'] as num?)?.toDouble() ?? 0.0;
-          }
+          return ListView.builder(
+            itemCount: wishListDocs.length,
+            itemBuilder: (context, index) {
+              final wishListItem = wishListDocs[index];
+              final productId = wishListItem['productId'];
 
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  itemCount: wishlistItems.length,
-                  itemBuilder: (context, index) {
-                    final item = wishlistItems[index];
-                    return _buildWishlistItem(
-                      docId: item.id,
-                      brand: item['brand'] ?? '',
-                      productName: item['productName'] ?? '',
-                      details: item['details'],
-                      price: (item['price'] as num?)?.toDouble() ?? 0.0,
-                    );
-                  },
-                ),
-              ),
-              _buildBottomBar(context, totalPrice),
-            ],
+              return FutureBuilder<DocumentSnapshot>(
+                future: FirebaseFirestore.instance
+                    .collection('products')
+                    .doc(productId)
+                    .get(),
+                builder: (context, productSnapshot) {
+                  if (productSnapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox(); // Placeholder while loading
+                  }
+
+                  if (!productSnapshot.hasData || !productSnapshot.data!.exists) {
+                    return const SizedBox(); // Product deleted or not found
+                  }
+
+                  final productData = productSnapshot.data!;
+
+
+                  return GestureDetector(
+                    onTap: () => Navigator.push(context,MaterialPageRoute(builder: (context) => ProductView(productUID: productData.id),)),
+                    child: _buildWishlistItem(
+                      context: context,
+                      wishlistDocId: wishListItem.id, // important for delete
+                      photoURL: productData['PhotosURL'][0],
+                      productName: productData['Name'] ,
+                      price: productData['Price'],
+                    ),
+                  );
+                },
+              );
+            },
           );
         },
       ),
@@ -135,40 +114,31 @@ class _WishlistState extends State<Wishlist> {
   }
 
   Widget _buildWishlistItem({
-    required String docId,
-    required String brand,
+    required BuildContext context,
+    required String wishlistDocId,
+    required String photoURL,
     required String productName,
-    String? details,
-    required double price,
+    required int price,
   }) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
+          SizedBox(
             width: 80,
             height: 80,
-            color: Colors.grey[200],
+            child: Image.network(photoURL),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(brand, style: KStyle.titleTextStyle),
-                    const Text('view brand', style: TextStyle(color: Colors.grey)),
-                  ],
-                ),
                 Text(productName, style: KStyle.normalTextStyle),
-                if (details != null)
-                  Text(details, style: const TextStyle(color: Colors.grey)),
                 const SizedBox(height: 8),
                 Text(
-                  '\$${price.toStringAsFixed(2)}',
+                  '\$$price',
                   style: KStyle.titleTextStyle,
                 ),
               ],
@@ -176,74 +146,12 @@ class _WishlistState extends State<Wishlist> {
           ),
           IconButton(
             icon: const Icon(Icons.close),
-            onPressed: () => _removeFromWishlist(docId),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomBar(BuildContext context, double totalPrice) {
-    return Container(
-      color: Colors.grey[100],
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Total Price', style: KStyle.titleTextStyle),
-              const SizedBox(height: 4),
-              Text(
-                '\$${totalPrice.toStringAsFixed(2)}',
-                style: KStyle.headerTextStyle.copyWith(fontSize: 18),
-              ),
-            ],
-          ),
-          const Spacer(),
-          FilledButton(
             onPressed: () async {
-              if (totalPrice > 0) {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text('Move to Cart', style: KStyle.titleTextStyle),
-                    content: Text('Move all items to your cart?', style: KStyle.normalTextStyle),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Move'),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirm == true) {
-                  await _moveAllToCart();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Items moved to cart!')),
-                  );
-                }
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Wishlist is empty.')),
-                );
-              }
+              await FirebaseFirestore.instance
+                  .collection('wishList')
+                  .doc(wishlistDocId)
+                  .delete();
             },
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text(
-              'Move All To Cart',
-              style: TextStyle(color: Colors.white, fontSize: 16),
-            ),
           ),
         ],
       ),
