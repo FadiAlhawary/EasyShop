@@ -11,16 +11,103 @@ class OrderPage extends StatefulWidget {
 }
 
 class _OrderState extends State<OrderPage> {
-  String paymentMethod = 'cash';
+  String? paymentMethod;
+  List<String> productIds = [];
+  List<Map<String, dynamic>> productsData = [];
 
-  final TextEditingController firstNameController = TextEditingController();
-  final TextEditingController companyNameController = TextEditingController();
-  final TextEditingController streetAddressController = TextEditingController();
-  final TextEditingController apartmentController = TextEditingController();
-  final TextEditingController cityController = TextEditingController();
+  final firstNameController = TextEditingController();
+  final companyNameController = TextEditingController();
+  final streetAddressController = TextEditingController();
+  final apartmentController = TextEditingController();
+  final cityController = TextEditingController();
 
   final Color primaryBlue = const Color(0xFF2979FF);
   final Color background = const Color(0xFFF0F4FF);
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCartProducts();
+  }
+
+  Future<void> _fetchCartProducts() async {
+    try {
+      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final cartSnapshot = await FirebaseFirestore.instance
+          .collection('cart')
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      List<String> ids = [];
+      List<Map<String, dynamic>> tempProducts = [];
+
+      for (var doc in cartSnapshot.docs) {
+        final productId = doc['productId'];
+        ids.add(productId);
+
+        // Now fetch product details
+        final productSnapshot = await FirebaseFirestore.instance
+            .collection('products')
+            .doc(productId)
+            .get();
+
+        if (productSnapshot.exists) {
+          tempProducts.add({
+            'name': productSnapshot['Name'],
+            'price': productSnapshot['Price'],
+          });
+        }
+      }
+
+      setState(() {
+        productIds = ids;
+        productsData = tempProducts;
+      });
+    } catch (e) {
+      print('Error fetching cart products: $e');
+    }
+  }
+
+  Future<void> _placeOrder() async {
+    final user = FirebaseAuth.instance.currentUser;
+    final cartRef= await FirebaseFirestore.instance.collection('cart').where('userId',isEqualTo: user!.uid).get();
+    if (user == null) return; // User not logged in
+
+    if (productIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Your cart is empty!')),
+      );
+      return;
+    }
+
+    await FirebaseFirestore.instance.collection('order').add({
+      'userId': user.uid,
+      'ProductId': productIds,
+      'PaymentMethod': paymentMethod,
+      'Date': Timestamp.now(),
+      'Name': firstNameController.text.trim(),
+      'streetAddress': streetAddressController.text.trim(),
+      'Apartment': apartmentController.text.trim(),
+      'City': cityController.text.trim(),
+      'totalPrice': _calculateTotalPrice(), // Optional total price
+    });
+     for(var doc in cartRef.docs){
+        doc.reference.delete();
+
+     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Order placed successfully')),
+    );
+  }
+
+  int _calculateTotalPrice() {
+    int total = 0;
+    for (var product in productsData) {
+      total += (product['price'] as int);
+    }
+    return total;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +131,16 @@ class _OrderState extends State<OrderPage> {
             _inputField('Street Address*', streetAddressController),
             _inputField('Apartment (optional)', apartmentController),
             _inputField('Town/City*', cityController),
+
+            const SizedBox(height: 20),
+            const Divider(thickness: 1.2),
+
+            const SizedBox(height: 20),
+            Text('Products:', style: KStyle.titleTextStyle.copyWith(color: primaryBlue)),
+            ...productsData.map((product) => ListTile(
+              title: Text(product['name']),
+              trailing: Text('\$${product['price']}'),
+            )),
 
             const SizedBox(height: 20),
             const Divider(thickness: 1.2),
@@ -73,8 +170,9 @@ class _OrderState extends State<OrderPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              onPressed: () {
-                _placeOrder(['product1', 'product2']);
+              onPressed: () async {
+                await _placeOrder();
+                Navigator.pop(context);
               },
               child: const Text('Place Order'),
             ),
@@ -100,45 +198,6 @@ class _OrderState extends State<OrderPage> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _priceRow(String label, int amount, {bool isFree = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: KStyle.titleTextStyle.copyWith(color: primaryBlue)),
-          Text(
-            isFree ? 'Free' : '\$$amount',
-            style: KStyle.titleTextStyle.copyWith(
-              color: primaryBlue,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _placeOrder(List<String> productId) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return; // User not logged in
-
-    await FirebaseFirestore.instance.collection('Order').add({
-      'userId': user.uid,
-      'ProductId': productId,
-      'paymentMethod': paymentMethod,
-      'Date': Timestamp.now(),
-      'Name': firstNameController.text.trim(),
-      'streetAddress': streetAddressController.text.trim(),
-      'Apartment': apartmentController.text.trim(),
-      'city': cityController.text.trim(),
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Order placed successfully')),
     );
   }
 }

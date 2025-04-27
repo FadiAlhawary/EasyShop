@@ -244,12 +244,7 @@ class _CartState extends State<Cart> {
           const Spacer(),
           FilledButton(
             onPressed: () {
-              // Checkout functionality (You can expand this)
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Order placed successfully!'),
-                ),
-              );
+
               Navigator.push(context, MaterialPageRoute(builder: (context) => OrderPage(),));
             },
             style: FilledButton.styleFrom(
