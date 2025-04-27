@@ -244,5 +244,3 @@ class _WishlistState extends State<Wishlist> {
     );
   }
 }
-
-
